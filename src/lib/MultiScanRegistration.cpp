@@ -62,7 +62,7 @@ void MultiScanMapper::set(const float &lowerBound,
 
 
 int MultiScanMapper::getRingForAngle(const float& angle) {
-  return int(((angle * 180 / M_PI) - _lowerBound) * _factor + 0.5);
+  return int(((angle * 180 / M_PI) - _lowerBound) * _factor + 0.5); //四舍五入
 }
 
 
@@ -162,9 +162,11 @@ void MultiScanRegistration::process(const pcl::PointCloud<pcl::PointXYZ>& laserC
   size_t cloudSize = laserCloudIn.size();
 
   // determine scan start and end orientations
+  //绕x轴旋转角度，顺时针为正,ＫＩＴＴＩ中x朝向车体前方
   float startOri = -std::atan2(laserCloudIn[0].y, laserCloudIn[0].x);
   float endOri = -std::atan2(laserCloudIn[cloudSize - 1].y,
                              laserCloudIn[cloudSize - 1].x) + 2 * float(M_PI);
+  //
   if (endOri - startOri > 3 * M_PI) {
     endOri -= 2 * M_PI;
   } else if (endOri - startOri < M_PI) {
@@ -178,6 +180,7 @@ void MultiScanRegistration::process(const pcl::PointCloud<pcl::PointXYZ>& laserC
   std::for_each(_laserCloudScans.begin(), _laserCloudScans.end(), [](auto&&v) {v.clear(); }); 
 
   // extract valid points from input cloud
+  //坐标系发生了变换，依旧是右手系，可能是为了跟ＩＭＵ坐标系保持一致
   for (int i = 0; i < cloudSize; i++) {
     point.x = laserCloudIn[i].y;
     point.y = laserCloudIn[i].z;

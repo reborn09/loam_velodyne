@@ -93,7 +93,7 @@ private:
   float _lowerBound;      ///< the vertical angle of the first scan ring
   float _upperBound;      ///< the vertical angle of the last scan ring
   uint16_t _nScanRings;   ///< number of scan rings
-  float _factor;          ///< linear interpolation factor
+  float _factor;          ///< linear interpolation factor 线数除以角度。６４线需要确认是不是线性的
 };
 
 
@@ -130,7 +130,7 @@ private:
   void process(const pcl::PointCloud<pcl::PointXYZ>& laserCloudIn, const Time& scanTime);
 
 private:
-  int _systemDelay = 20;             ///< system startup delay counter
+  int _systemDelay = 20;             ///< system startup delay counter 前２０帧抛弃，不做处理
   MultiScanMapper _scanMapper;  ///< mapper for mapping vertical point angles to scan ring IDs
   std::vector<pcl::PointCloud<pcl::PointXYZI> > _laserCloudScans;
   ros::Subscriber _subLaserCloud;   ///< input cloud message subscriber

@@ -232,6 +232,7 @@ namespace loam
     RegistrationParams _config;  ///< registration parameter
 
     pcl::PointCloud<pcl::PointXYZI> _laserCloud;   ///< full resolution input cloud
+    //每一线激光开始结束的位置
     std::vector<IndexRange> _scanIndices;          ///< start and end indices of the individual scans withing the full resolution cloud
 
     pcl::PointCloud<pcl::PointXYZI> _cornerPointsSharp;      ///< sharp corner points cloud
