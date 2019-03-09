@@ -13,7 +13,7 @@ namespace loam {
  *
  * @tparam T The buffer element type.
  */
- //类似于栈的缓冲区，当空间满后，覆盖最早的元素
+ //类似于FIFO的缓冲区，当空间满后，覆盖最早的元素
 template <class T>
 class CircularBuffer {
 public:

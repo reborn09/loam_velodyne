@@ -37,7 +37,7 @@ void BasicScanRegistration::processScanlines(const Time& scanTime, std::vector<p
 
     IndexRange range(cloudSize, 0);
     cloudSize += laserCloudScans[i].size();
-    range.second = cloudSize > 0 ? cloudSize - 1 : 0;
+    range.second = cloudSize > 0 ? cloudSize - 1 : 0;  
     _scanIndices.push_back(range);
   }
 
@@ -108,7 +108,7 @@ void BasicScanRegistration::projectPointToStartOfSweep(pcl::PointXYZI& point, fl
   }
 }
 
-
+//reltime is time duration from sweep begin to now
 void BasicScanRegistration::setIMUTransformFor(const float& relTime)
 {
   interpolateIMUStateFor(relTime, _imuCur);
@@ -139,7 +139,7 @@ void BasicScanRegistration::interpolateIMUStateFor(const float &relTime, IMUStat
 {
   double timeDiff = toSec(_scanTime - _imuHistory[_imuIdx].stamp) + relTime;
   while (_imuIdx < _imuHistory.size() - 1 && timeDiff > 0) {
-    _imuIdx++;
+    _imuIdx++;  //_imuIdx is 0 every time
     timeDiff = toSec(_scanTime - _imuHistory[_imuIdx].stamp) + relTime;
   }
 

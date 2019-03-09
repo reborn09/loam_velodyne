@@ -238,6 +238,7 @@ namespace loam
     pcl::PointCloud<pcl::PointXYZI> _cornerPointsSharp;      ///< sharp corner points cloud
     pcl::PointCloud<pcl::PointXYZI> _cornerPointsLessSharp;  ///< less sharp corner points cloud
     pcl::PointCloud<pcl::PointXYZI> _surfacePointsFlat;      ///< flat surface points cloud
+    //maybe all of the others are less flat, however it is downsized
     pcl::PointCloud<pcl::PointXYZI> _surfacePointsLessFlat;  ///< less flat surface points cloud
 
     Time _sweepStart;            ///< time stamp of beginning of current sweep
@@ -247,7 +248,7 @@ namespace loam
     Vector3 _imuPositionShift;              ///< position shift between accumulated IMU position and interpolated IMU position
     size_t _imuIdx = 0;                         ///< the current index in the IMU history
     CircularBuffer<IMUState> _imuHistory;   ///< history of IMU states for cloud registration
-
+    //0:sweep start rpy; 1: sweep end rpy; 2:xyz shift between sweep; 3:velocity change between sweep
     pcl::PointCloud<pcl::PointXYZ> _imuTrans = { 4,1 };  ///< IMU transformation information
 
     std::vector<float> _regionCurvature;      ///< point curvature buffer

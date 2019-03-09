@@ -88,6 +88,7 @@ bool MultiScanRegistration::setup(ros::NodeHandle& node, ros::NodeHandle& privat
 
 bool MultiScanRegistration::setupROS(ros::NodeHandle& node, ros::NodeHandle& privateNode, RegistrationParams& config_out)
 {
+  //init imu sub and cloud pub
   if (!ScanRegistration::setupROS(node, privateNode, config_out))
     return false;
 
