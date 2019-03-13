@@ -1,5 +1,6 @@
 #include <ctime>
 #include "ros/ros.h"
+#include <fstream>
 #include <string>
 #include <sensor_msgs/PointCloud2.h>
 #include <pcl_conversions/pcl_conversions.h>
@@ -7,6 +8,7 @@
 #include <pcl/point_types.h>
 
 using namespace std;
+//#define SAVE_LIDAR
 
 void read_filelists(const std::string& dir_path,std::vector<std::string>& out_filelsits,std::string type)
 {
@@ -54,6 +56,7 @@ int main(int argc, char **argv)
     //need to change for different sequence
     string base_dir="/home/jiapengz/data/kitti/data_odometry_velodyne/dataset/sequences/";
     string sequence="03";
+    string save_location="/home/jiapengz/data/lidar_save/";
 
     string bin_path;
     stringstream ss;
@@ -96,6 +99,29 @@ int main(int argc, char **argv)
         cloud64.width =point_count;
         cloud64.resize(cloud64.width*cloud64.height); // 重新调整点云尺寸至真实值
         input.close();
+
+#ifdef SAVE_LIDAR
+        string file_path;
+        stringstream ss;
+        ss<<save_location<<i<<".txt";
+        ss>>file_path;
+
+        fstream fwriter;
+        fwriter.open(file_path,ios::out);
+        if(!fwriter.is_open()){
+          cerr<<"can't open file: "<<file_path<<endl;
+        }else{
+          for(int index=0;index<cloud64.points.size();index++){
+            double angle=cloud64.points[index].z/sqrt(cloud64.points[index].x*cloud64.points[index].x+cloud64.points[index].y*cloud64.points[index].y);
+            angle=angle/3.1415926*180;
+            fwriter<<cloud64.points[index].x<<"  "
+                   <<cloud64.points[index].y<<"  "
+                   <<cloud64.points[index].z<<"  "
+                   <<angle<<endl;
+          }
+          fwriter.close();
+        }
+#endif
 
         // 将pcl::PCLPointCLoud2格式转换成sensor_msgs::PointCloud2格式
         sensor_msgs::PointCloud2 output64;
