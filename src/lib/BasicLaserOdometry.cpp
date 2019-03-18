@@ -217,13 +217,13 @@ void BasicLaserOdometry::process()
    _frameCount++;
    _transform.pos -= _imuVeloFromStart * _scanPeriod;
 
-
    size_t lastCornerCloudSize = _lastCornerCloud->points.size();
    size_t lastSurfaceCloudSize = _lastSurfaceCloud->points.size();
 
+   //calculate transform between sweep
    if (lastCornerCloudSize > 10 && lastSurfaceCloudSize > 100)
    {
-      std::vector<int> pointSearchInd(1);
+      std::vector<int> pointSearchInd(1); //one element, init with 0
       std::vector<float> pointSearchSqDis(1);
       std::vector<int> indices;
 
@@ -247,6 +247,7 @@ void BasicLaserOdometry::process()
          {
             transformToStart(_cornerPointsSharp->points[i], pointSel);
 
+            //find new closet point every 5 iteration
             if (iterCount % 5 == 0)
             {
                pcl::removeNaNFromPointCloud(*_lastCornerCloud, *_lastCornerCloud, indices);
@@ -300,7 +301,7 @@ void BasicLaserOdometry::process()
                _pointSearchCornerInd1[i] = closestPointInd;
                _pointSearchCornerInd2[i] = minPointInd2;
             }
-
+            //point to line projection
             if (_pointSearchCornerInd2[i] >= 0)
             {
                tripod1 = _lastCornerCloud->points[_pointSearchCornerInd1[i]];
@@ -365,6 +366,7 @@ void BasicLaserOdometry::process()
          {
             transformToStart(_surfPointsFlat->points[i], pointSel);
 
+            //find new cloest point every 5 iteration
             if (iterCount % 5 == 0)
             {
                _lastSurfaceKDTree.nearestKSearch(pointSel, 1, pointSearchInd, pointSearchSqDis);
@@ -433,7 +435,7 @@ void BasicLaserOdometry::process()
                _pointSearchSurfInd2[i] = minPointInd2;
                _pointSearchSurfInd3[i] = minPointInd3;
             }
-
+            //point to plane projection
             if (_pointSearchSurfInd2[i] >= 0 && _pointSearchSurfInd3[i] >= 0)
             {
                tripod1 = _lastSurfaceCloud->points[_pointSearchSurfInd1[i]];
@@ -596,6 +598,7 @@ void BasicLaserOdometry::process()
             matX = matP * matX2;
          }
 
+         //refresh R and T
          _transform.rot_x = _transform.rot_x.rad() + matX(0, 0);
          _transform.rot_y = _transform.rot_y.rad() + matX(1, 0);
          _transform.rot_z = _transform.rot_z.rad() + matX(2, 0);

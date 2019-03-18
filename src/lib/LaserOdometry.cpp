@@ -194,7 +194,7 @@ namespace loam
 
     cornerPointsLessSharp()->clear();
     pcl::fromROSMsg(*cornerPointsLessSharpMsg, *cornerPointsLessSharp());
-    std::vector<int> indices;
+    std::vector<int> indices;  //map from cloudin to cloudout,for pcl use
     pcl::removeNaNFromPointCloud(*cornerPointsLessSharp(), *cornerPointsLessSharp(), indices);
     _newCornerPointsLessSharp = true;
   }
@@ -317,6 +317,8 @@ namespace loam
     _tfBroadcaster.sendTransform(_laserOdometryTrans);
 
     // publish cloud results according to the input output ratio
+    // pub frequence can change depends on _ioratio
+    // corner points, surf points and full resolution points are all transformed to sweep end;
     if (_ioRatio < 2 || frameCount() % _ioRatio == 1)
     {
       ros::Time sweepTime = _timeSurfPointsLessFlat;
