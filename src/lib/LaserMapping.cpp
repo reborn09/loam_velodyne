@@ -286,6 +286,7 @@ void LaserMapping::publishResult()
    geometry_msgs::Quaternion geoQuat = tf::createQuaternionMsgFromRollPitchYaw
    (transformAftMapped().rot_z.rad(), -transformAftMapped().rot_x.rad(), -transformAftMapped().rot_y.rad());
 
+   //after maped rpy zyx, before mapped rpy xyz;
    _odomAftMapped.header.stamp = _timeLaserOdometry;
    _odomAftMapped.pose.pose.orientation.x = -geoQuat.y;
    _odomAftMapped.pose.pose.orientation.y = -geoQuat.z;

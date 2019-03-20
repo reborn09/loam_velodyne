@@ -1,6 +1,11 @@
 #include <ros/ros.h>
 #include "loam_velodyne/MultiScanRegistration.h"
 
+/*
+ * frame_id describetion
+ * camera_init: origin location
+ * camera: current location
+ */
 
 /** Main node entry point. */
 int main(int argc, char **argv)

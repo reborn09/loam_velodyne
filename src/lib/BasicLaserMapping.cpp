@@ -99,7 +99,7 @@ BasicLaserMapping::BasicLaserMapping(const float& scanPeriod, const size_t& maxI
    _downSizeFilterSurf.setLeafSize(0.4, 0.4, 0.4);
 }
 
-
+//calculate RT difference provide by odometry, and update transform init for mapping
 void BasicLaserMapping::transformAssociateToMap()
 {
    _transformIncre.pos = _transformBefMapped.pos - _transformSum.pos;
@@ -266,6 +266,7 @@ bool BasicLaserMapping::createDownsizedMap()
 bool BasicLaserMapping::process(Time const& laserOdometryTime)
 {
    // skip some frames?!?
+   // process every _frameCount frame
    _frameCount++;
    if (_frameCount < _stackFrameNum)
    {
@@ -277,6 +278,7 @@ bool BasicLaserMapping::process(Time const& laserOdometryTime)
    pcl::PointXYZI pointSel;
 
    // relate incoming data to map
+   //calculate _transformTobeMapped
    transformAssociateToMap();
 
    for (auto const& pt : _laserCloudCornerLast->points)
@@ -297,6 +299,7 @@ bool BasicLaserMapping::process(Time const& laserOdometryTime)
    pointOnYAxis.z = 0.0;
    pointAssociateToMap(pointOnYAxis, pointOnYAxis);
 
+   //every cube is 50 m^3 ???
    auto const CUBE_SIZE = 50.0;
    auto const CUBE_HALF = CUBE_SIZE / 2;
 
@@ -304,6 +307,7 @@ bool BasicLaserMapping::process(Time const& laserOdometryTime)
    int centerCubeJ = int((_transformTobeMapped.pos.y() + CUBE_HALF) / CUBE_SIZE) + _laserCloudCenHeight;
    int centerCubeK = int((_transformTobeMapped.pos.z() + CUBE_HALF) / CUBE_SIZE) + _laserCloudCenDepth;
 
+   //current location ls in center cube
    if (_transformTobeMapped.pos.x() + CUBE_HALF < 0) centerCubeI--;
    if (_transformTobeMapped.pos.y() + CUBE_HALF < 0) centerCubeJ--;
    if (_transformTobeMapped.pos.z() + CUBE_HALF < 0) centerCubeK--;

@@ -130,8 +130,8 @@ private:
    Time _laserOdometryTime;
 
    float _scanPeriod;          ///< time per scan
-   const int _stackFrameNum;
-   const int _mapFrameNum;
+   const int _stackFrameNum;  //process every _stackFrameNum frames
+   const int _mapFrameNum;    //generate map every _stackFrameNum * _mapFrameNum frames
    long _frameCount;
    long _mapFrameCount;
 
@@ -139,7 +139,7 @@ private:
    float _deltaTAbort;     ///< optimization abort threshold for deltaT
    float _deltaRAbort;     ///< optimization abort threshold for deltaR
 
-   int _laserCloudCenWidth;
+   int _laserCloudCenWidth;  //origin cube, centerCube is current cube
    int _laserCloudCenHeight;
    int _laserCloudCenDepth;
    const size_t _laserCloudWidth;
@@ -157,13 +157,14 @@ private:
    pcl::PointCloud<pcl::PointXYZI>::Ptr _laserCloudSurfStackDS;    ///< down sampled
 
    pcl::PointCloud<pcl::PointXYZI>::Ptr _laserCloudSurround;
-   pcl::PointCloud<pcl::PointXYZI>::Ptr _laserCloudSurroundDS;     ///< down sampled
+   pcl::PointCloud<pcl::PointXYZI>::Ptr _laserCloudSurroundDS;     ///< down sampled, pub map
    pcl::PointCloud<pcl::PointXYZI>::Ptr _laserCloudCornerFromMap;
    pcl::PointCloud<pcl::PointXYZI>::Ptr _laserCloudSurfFromMap;
 
    pcl::PointCloud<pcl::PointXYZI> _laserCloudOri;
    pcl::PointCloud<pcl::PointXYZI> _coeffSel;
 
+   //one element contain one set of cube points
    std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> _laserCloudCornerArray;
    std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> _laserCloudSurfArray;
    std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> _laserCloudCornerDSArray;  ///< down sampled
