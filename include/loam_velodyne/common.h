@@ -53,11 +53,13 @@ template <typename PointT>
 inline void publishCloudMsg(ros::Publisher& publisher,
                             const pcl::PointCloud<PointT>& cloud,
                             const ros::Time& stamp,
-                            std::string frameID) {
+                            std::string frameID,
+                            int sequence) {
   sensor_msgs::PointCloud2 msg;
   pcl::toROSMsg(cloud, msg);
   msg.header.stamp = stamp;
   msg.header.frame_id = frameID;
+  msg.header.seq = sequence;
   publisher.publish(msg);
 }
 

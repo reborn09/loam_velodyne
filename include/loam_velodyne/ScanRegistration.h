@@ -82,6 +82,9 @@ namespace loam
     */
     bool parseParams(const ros::NodeHandle& nh, RegistrationParams& config_out);
 
+  public:
+    int sequence = 0; //header sequence, start from 0
+
   private:
     ros::Subscriber _subImu;                    ///< IMU message subscriber
     ros::Publisher _pubLaserCloud;              ///< full resolution cloud message publisher

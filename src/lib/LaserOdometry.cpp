@@ -230,7 +230,7 @@ namespace loam
   void LaserOdometry::laserCloudFullResHandler(const sensor_msgs::PointCloud2ConstPtr& laserCloudFullResMsg)
   {
     _timeLaserCloudFullRes = laserCloudFullResMsg->header.stamp;
-
+    sequence = laserCloudFullResMsg->header.seq;
     laserCloud()->clear();
     pcl::fromROSMsg(*laserCloudFullResMsg, *laserCloud());
     std::vector<int> indices;
@@ -302,6 +302,7 @@ namespace loam
                                                                                -transformSum().rot_y.rad());
 
     _laserOdometryMsg.header.stamp            = _timeSurfPointsLessFlat;
+    _laserOdometryMsg.header.seq              = sequence;
     _laserOdometryMsg.pose.pose.orientation.x = -geoQuat.y;
     _laserOdometryMsg.pose.pose.orientation.y = -geoQuat.z;
     _laserOdometryMsg.pose.pose.orientation.z = geoQuat.x;
@@ -320,11 +321,11 @@ namespace loam
     if (_ioRatio < 2 || frameCount() % _ioRatio == 1)
     {
       ros::Time sweepTime = _timeSurfPointsLessFlat;
-      publishCloudMsg(_pubLaserCloudCornerLast, *lastCornerCloud(), sweepTime, "/camera");
-      publishCloudMsg(_pubLaserCloudSurfLast, *lastSurfaceCloud(), sweepTime, "/camera");
+      publishCloudMsg(_pubLaserCloudCornerLast, *lastCornerCloud(), sweepTime, "/camera", sequence);
+      publishCloudMsg(_pubLaserCloudSurfLast, *lastSurfaceCloud(), sweepTime, "/camera", sequence);
 
       transformToEnd(laserCloud());  // transform full resolution cloud to sweep end before sending it
-      publishCloudMsg(_pubLaserCloudFullRes, *laserCloud(), sweepTime, "/camera");
+      publishCloudMsg(_pubLaserCloudFullRes, *laserCloud(), sweepTime, "/camera", sequence);
     }
   }
 

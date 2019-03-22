@@ -45,7 +45,6 @@
 #include <tf/transform_broadcaster.h>
 
 
-
 namespace loam
 {
 /** \brief Implementation of the LOAM laser mapping component.
@@ -111,6 +110,7 @@ protected:
    void publishResult();
 
 private:
+   int sequence = 0;  //header sequence, start from 0
    ros::Time _timeLaserCloudCornerLast;   ///< time of current last corner cloud
    ros::Time _timeLaserCloudSurfLast;     ///< time of current last surface cloud
    ros::Time _timeLaserCloudFullRes;      ///< time of current full resolution cloud

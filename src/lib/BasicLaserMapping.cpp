@@ -50,8 +50,8 @@ using std::pow;
 
 BasicLaserMapping::BasicLaserMapping(const float& scanPeriod, const size_t& maxIterations) :
    _scanPeriod(scanPeriod),
-   _stackFrameNum(1),
-   _mapFrameNum(5),
+   _stackFrameNum(0),  //process every frame
+   _mapFrameNum(0),
    _frameCount(0),
    _mapFrameCount(0),
    _maxIterations(maxIterations),

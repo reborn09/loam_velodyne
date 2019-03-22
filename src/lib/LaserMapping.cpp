@@ -196,6 +196,7 @@ void LaserMapping::laserCloudSurfLastHandler(const sensor_msgs::PointCloud2Const
 void LaserMapping::laserCloudFullResHandler(const sensor_msgs::PointCloud2ConstPtr& laserCloudFullResMsg)
 {
    _timeLaserCloudFullRes = laserCloudFullResMsg->header.stamp;
+   sequence = laserCloudFullResMsg->header.seq;
    laserCloud().clear();
    pcl::fromROSMsg(*laserCloudFullResMsg, laserCloud());
    _newLaserCloudFullRes = true;
@@ -264,7 +265,6 @@ void LaserMapping::process()
 {
    if (!hasNewData())// waiting for new data to arrive...
       return;
-
    reset();// reset flags, etc.
 
    if (!BasicLaserMapping::process(fromROSTime(_timeLaserOdometry)))
@@ -277,16 +277,16 @@ void LaserMapping::publishResult()
 {
    // publish new map cloud according to the input output ratio
    if (hasFreshMap()) // publish new map cloud
-      publishCloudMsg(_pubLaserCloudSurround, laserCloudSurroundDS(), _timeLaserOdometry, "/camera_init");
+      publishCloudMsg(_pubLaserCloudSurround, laserCloudSurroundDS(), _timeLaserOdometry, "/camera_init", sequence);
 
    // publish transformed full resolution input cloud
-   publishCloudMsg(_pubLaserCloudFullRes, laserCloud(), _timeLaserOdometry, "/camera_init");
-
+   publishCloudMsg(_pubLaserCloudFullRes, laserCloud(), _timeLaserOdometry, "/camera_init", sequence);
    // publish odometry after mapped transformations
    geometry_msgs::Quaternion geoQuat = tf::createQuaternionMsgFromRollPitchYaw
    (transformAftMapped().rot_z.rad(), -transformAftMapped().rot_x.rad(), -transformAftMapped().rot_y.rad());
 
    _odomAftMapped.header.stamp = _timeLaserOdometry;
+   _odomAftMapped.header.seq   = sequence;
    _odomAftMapped.pose.pose.orientation.x = -geoQuat.y;
    _odomAftMapped.pose.pose.orientation.y = -geoQuat.z;
    _odomAftMapped.pose.pose.orientation.z = geoQuat.x;

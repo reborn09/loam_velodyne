@@ -121,6 +121,7 @@ namespace loam
 
   private:
     uint16_t _ioRatio;       ///< ratio of input to output frames
+    int sequence = 0; //header sequence, start from 0
 
     ros::Time _timeCornerPointsSharp;      ///< time of current sharp corner cloud
     ros::Time _timeCornerPointsLessSharp;  ///< time of current less sharp corner cloud

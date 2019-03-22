@@ -50,13 +50,13 @@ int main(int argc, char **argv)
     ros::Publisher velodyne_pub = n.advertise<sensor_msgs::PointCloud2> ("/velodyne_points", 2);
 
     //pub frequence
-    int frequence=10;
+    int frequence = 2;
     ros::Rate loop_rate(frequence);
 
     //need to change for different sequence
-    string base_dir="/home/jiapengz/data/kitti/data_odometry_velodyne/dataset/sequences/";
-    string sequence="03";
-    string save_location="/home/jiapengz/data/lidar_save/";
+    string base_dir = "/home/jiapengz/data/kitti/data_odometry_velodyne/dataset/sequences/";
+    string sequence = "00";
+    string save_location = "/home/jiapengz/data/lidar_save/";
 
     string bin_path;
     stringstream ss;
@@ -127,7 +127,7 @@ int main(int argc, char **argv)
         sensor_msgs::PointCloud2 output64;
         pcl::toROSMsg(cloud64,output64);
 
-        output64.header.seq=i;
+        output64.header.seq = i;
         output64.header.frame_id="/velodyne";
         output64.header.stamp=ros::Time::now();
         velodyne_pub.publish(output64);

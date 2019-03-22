@@ -9,7 +9,8 @@ int main(int argc, char **argv)
   ros::NodeHandle node;
   ros::NodeHandle privateNode("~");
 
-  loam::LaserOdometry laserOdom(0.1);
+  //set ioratio to 1, publish every frame
+  loam::LaserOdometry laserOdom(0.1, 1);
 
   if (laserOdom.setup(node, privateNode)) {
     // initialization successful
