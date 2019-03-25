@@ -13,16 +13,20 @@ find_package(catkin REQUIRED COMPONENTS
 
 find_package(Eigen3 REQUIRED)
 find_package(PCL REQUIRED)
+find_package(OpenCV REQUIRED)
+
 
 include_directories(
   include
-	${catkin_INCLUDE_DIRS} 
-	#${EIGEN3_INCLUDE_DIR}
-	${PCL_INCLUDE_DIRS})
+  ${catkin_INCLUDE_DIRS}
+  #${EIGEN3_INCLUDE_DIR}
+  ${PCL_INCLUDE_DIRS}
+  ${OpenCV_INCLUDE_DIRS}
+)
 
 catkin_package(
   CATKIN_DEPENDS geometry_msgs nav_msgs roscpp rospy std_msgs tf pcl_conversions
-  DEPENDS EIGEN3 PCL
+  DEPENDS EIGEN3 PCL OpenCV
   INCLUDE_DIRS include
   LIBRARIES loam
 )
@@ -51,6 +55,9 @@ target_link_libraries(laserMapping ${catkin_LIBRARIES} ${PCL_LIBRARIES} loam )
 
 add_executable(transformMaintenance src/transform_maintenance_node.cpp)
 target_link_libraries(transformMaintenance ${catkin_LIBRARIES} ${PCL_LIBRARIES} loam )
+
+add_executable(obstacleDetection src/obstacle_detection_node.cpp)
+target_link_libraries(obstacleDetection ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBRARIES} loam )
 
 if (CATKIN_ENABLE_TESTING)
   find_package(rostest REQUIRED)

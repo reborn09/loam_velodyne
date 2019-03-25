@@ -86,7 +86,7 @@ int main(int argc, char **argv)
         int point_count;
         for (point_count=0; input.good() && !input.eof(); ) {
           pcl::PointXYZI point;
-          input.read((char *) &point.x, sizeof(float));
+          input.read((char *) &point.x, sizeof(float)); //m
           input.read((char *) &point.y, sizeof(float));
           input.read((char *) &point.z, sizeof(float));
           input.read((char *) &point.intensity, sizeof(float));
