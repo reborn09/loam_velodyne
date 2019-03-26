@@ -6,42 +6,9 @@
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
+#include "loam_velodyne/paremeterUse.h"
 
 using namespace std;
-//#define SAVE_LIDAR
-
-void read_filelists(const std::string& dir_path,std::vector<std::string>& out_filelsits,std::string type)
-{
-    struct dirent *ptr;
-    DIR *dir;
-    dir = opendir(dir_path.c_str());
-    out_filelsits.clear();
-    while ((ptr = readdir(dir)) != NULL){
-        std::string tmp_file = ptr->d_name;
-        if (tmp_file[0] == '.')continue;
-        if (type.size() <= 0){
-            out_filelsits.push_back(ptr->d_name);
-        }else{
-            if (tmp_file.size() < type.size())continue;
-            std::string tmp_cut_type = tmp_file.substr(tmp_file.size() - type.size(),type.size());
-            if (tmp_cut_type == type){
-                out_filelsits.push_back(ptr->d_name);
-            }
-        }
-    }
-}
-
-bool computePairNum(std::string pair1,std::string pair2)
-{
-    return pair1 < pair2;
-}
-
-void sort_filelists(std::vector<std::string>& filists,std::string type)
-{
-    if (filists.empty())return;
-
-    std::sort(filists.begin(),filists.end(),computePairNum);
-}
 
 int main(int argc, char **argv)
 {
@@ -50,17 +17,11 @@ int main(int argc, char **argv)
     ros::Publisher velodyne_pub = n.advertise<sensor_msgs::PointCloud2> ("/velodyne_points", 2);
 
     //pub frequence
-    int frequence = 2;
     ros::Rate loop_rate(frequence);
-
-    //need to change for different sequence
-    string base_dir = "/home/jiapengz/data/kitti/data_odometry_velodyne/dataset/sequences/";
-    string sequence = "00";
-    string save_location = "/home/jiapengz/data/lidar_save/";
 
     string bin_path;
     stringstream ss;
-    ss<<base_dir<<sequence<<"/velodyne/";
+    ss<<lidar_base_dir<<sequence<<"/velodyne/";
     ss>>bin_path;
     std::vector<std::string> file_lists;
     read_filelists( bin_path, file_lists, "bin" );
@@ -100,10 +61,10 @@ int main(int argc, char **argv)
         cloud64.resize(cloud64.width*cloud64.height); // 重新调整点云尺寸至真实值
         input.close();
 
-#ifdef SAVE_LIDAR
+#ifdef SAVE_PARSER_LIDAR
         string file_path;
         stringstream ss;
-        ss<<save_location<<i<<".txt";
+        ss<<save_lidar_location<<i<<".txt";
         ss>>file_path;
 
         fstream fwriter;

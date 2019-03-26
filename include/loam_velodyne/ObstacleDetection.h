@@ -13,6 +13,7 @@
 #include <opencv/cv.h>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/core/core.hpp>
+#include "loam_velodyne/paremeterUse.h"
 
 namespace loam {
 
@@ -46,6 +47,7 @@ private:
   void projectPointToGridMulti(pcl:: PointXYZI pi);
   void gridAttrToMatSingle();
   void gridAttrToMatMulti();
+  void saveResult();
   void laserCloudHandler(const sensor_msgs::PointCloud2ConstPtr& laserCloudMsg);
   void odometryHandler(const nav_msgs::Odometry::ConstPtr& odometryMsg);
 
@@ -75,6 +77,12 @@ private:
 
   Grid _grid_attr_multi[325][200];
   cv::Mat obs_multi;
+
+  cv::Mat img;
+
+  std::string img_path;
+  std::vector<std::string> file_lists;
+
 };
 
 }

@@ -146,7 +146,7 @@ void MultiScanRegistration::handleCloudMessage(const sensor_msgs::PointCloud2Con
   if (_systemDelay > 0) 
   {
     --_systemDelay;
-    return;
+    //return;
   }
 
   // fetch new input cloud

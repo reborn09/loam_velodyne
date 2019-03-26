@@ -15,6 +15,12 @@ ObstacleDetection::ObstacleDetection(int fusion_num) :
   }
   obs_single = cv::Mat::zeros(325, 200, CV_8UC3);
   obs_multi = cv::Mat::zeros(325, 200, CV_8UC3);
+
+  std::stringstream ss;
+  ss<<img_base_dir<<sequence<<"/image_2/";
+  ss>>img_path;
+  read_filelists(img_path, file_lists, "png");
+  sort_filelists(file_lists, "png");
 }
 
 bool ObstacleDetection::setup(ros::NodeHandle &node){
@@ -68,6 +74,17 @@ void ObstacleDetection::process(){
   }
   gridAttrToMatMulti();
 
+  std::string file_path = img_path + file_lists[_sequence];
+  img = cv::imread(file_path);
+
+  //std::cout<<"index: "<<_sequence<<std::endl;
+  //std::cout<<(img_path + file_lists[_sequence])<<std::endl;
+
+#ifdef SAVE_RESULT
+  saveResult();
+#endif
+
+  cv::imshow("image", img);
   cv::imshow("single", obs_single);
   cv::imshow("multi", obs_multi);
   cv::waitKey(3);
@@ -223,6 +240,27 @@ void ObstacleDetection::gridAttrToMatMulti(){
       }
     }
   }
+}
+
+void ObstacleDetection::saveResult(){
+  std::string img_save_path;
+  std::string mat_single_path;
+  std::string mat_multi_path;
+  std::stringstream ss;
+  ss<<result_save_location<<_sequence<<"_img.jpg";
+  ss>>img_save_path;
+
+  ss.clear();
+  ss<<result_save_location<<_sequence<<"_single.jpg";
+  ss>>mat_single_path;
+
+  ss.clear();
+  ss<<result_save_location<<_sequence<<"_multi.jpg";
+  ss>>mat_multi_path;
+
+  cv::imwrite(img_save_path, img);
+  cv::imwrite(mat_single_path, obs_single);
+  cv::imwrite(mat_multi_path, obs_multi);
 }
 
 void ObstacleDetection::laserCloudHandler(const sensor_msgs::PointCloud2ConstPtr &laserCloudMsg){
