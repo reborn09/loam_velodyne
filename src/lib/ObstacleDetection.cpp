@@ -4,17 +4,16 @@
 
 namespace loam {
 
-ObstacleDetection::ObstacleDetection(int fusion_num) :
-  _laserCloud(new pcl::PointCloud<pcl::PointXYZI>()),
-  _fusion_num(fusion_num)
+ObstacleDetection::ObstacleDetection() :
+  _laserCloud(new pcl::PointCloud<pcl::PointXYZI>())
 {
-  for(int i=0;i<fusion_num;i++){
+  for(int i=0;i<_fusion_num;i++){
     pcl::PointCloud<pcl::PointXYZI>::Ptr tmp_laser(new pcl::PointCloud<pcl::PointXYZI>());
     tmp_laser->clear();
     _laserCloudStack.push_back(tmp_laser);
   }
-  obs_single = cv::Mat::zeros(325, 200, CV_8UC3);
-  obs_multi = cv::Mat::zeros(325, 200, CV_8UC3);
+  obs_single = cv::Mat::zeros(600, 400, CV_8UC3);
+  obs_multi = cv::Mat::zeros(600, 400, CV_8UC3);
 
   std::stringstream ss;
   ss<<img_base_dir<<sequence<<"/image_2/";
@@ -77,9 +76,6 @@ void ObstacleDetection::process(){
   std::string file_path = img_path + file_lists[_sequence];
   img = cv::imread(file_path);
 
-  //std::cout<<"index: "<<_sequence<<std::endl;
-  //std::cout<<(img_path + file_lists[_sequence])<<std::endl;
-
 #ifdef SAVE_RESULT
   saveResult();
 #endif
@@ -99,28 +95,28 @@ void ObstacleDetection::reset(){
   _newOdometry = false;
 
   //reset mat
-  for(int row = 0; row < 325; row++){
-    for(int col = 0; col <200; col++){
+  for(int row = 0; row < 600; row++){
+    for(int col = 0; col < 400; col++){
       obs_single.at<cv::Vec3b>(row, col) = cv::Vec3b(0, 0, 0);  //black
     }
   }
 
   //reset grid
-  for(int row = 0; row < 325; row++){
-    for(int col = 0; col <200; col++){
+  for(int row = 0; row < 600; row++){
+    for(int col = 0; col < 400; col++){
       _grid_attr_single[row][col].valid = false;
       _grid_attr_single[row][col].attribute = UNKNOWN;
     }
   }
 
-  for(int row = 0; row < 325; row++){
-    for(int col = 0; col <200; col++){
+  for(int row = 0; row < 600; row++){
+    for(int col = 0; col < 400; col++){
       obs_multi.at<cv::Vec3b>(row, col) = cv::Vec3b(0, 0, 0);  //black
     }
   }
 
-  for(int row = 0; row < 325; row++){
-    for(int col = 0; col <200; col++){
+  for(int row = 0; row < 600; row++){
+    for(int col = 0; col < 400; col++){
       _grid_attr_multi[row][col].valid = false;
       _grid_attr_multi[row][col].attribute = UNKNOWN;
     }
@@ -144,10 +140,10 @@ void ObstacleDetection::pointToOrigin(const pcl::PointXYZI &pi, pcl::PointXYZI &
 
 void ObstacleDetection::projectPointToGridSingle(pcl::PointXYZI pi){
   //int use floor, int(-0.1) = -1
-  int row = 249 - int(pi.x*100.0/_grid_size);
-  int col = 99 - int(pi.y*100.0/_grid_size);
+  int row = 449 - int(pi.x*100.0/_grid_size);
+  int col = 199 - int(pi.y*100.0/_grid_size);
 
-  if(0<=row && row<325 && 0<=col && col<200){
+  if(0<=row && row<600 && 0<=col && col<399){
     if(_grid_attr_single[row][col].valid == false){
       _grid_attr_single[row][col].valid = true;
       _grid_attr_single[row][col].min_height = 100.0 * pi.z;
@@ -165,10 +161,10 @@ void ObstacleDetection::projectPointToGridSingle(pcl::PointXYZI pi){
 
 void ObstacleDetection::projectPointToGridMulti(pcl::PointXYZI pi){
   //int use floor, int(-0.1) = -1
-  int row = 249 - int(pi.x*100.0/_grid_size);
-  int col = 99 - int(pi.y*100.0/_grid_size);
+  int row = 449 - int(pi.x*100.0/_grid_size);
+  int col = 199 - int(pi.y*100.0/_grid_size);
 
-  if(0<=row && row<325 && 0<=col && col<200){
+  if(0<=row && row<600 && 0<=col && col<400){
     if(_grid_attr_multi[row][col].valid == false){
       _grid_attr_multi[row][col].valid = true;
       _grid_attr_multi[row][col].min_height = 100.0 * pi.z;
@@ -185,8 +181,8 @@ void ObstacleDetection::projectPointToGridMulti(pcl::PointXYZI pi){
 }
 
 void ObstacleDetection::gridAttrToMatSingle(){
-  for(int row = 0; row < 325; row++){
-    for(int col = 0; col<200; col++){
+  for(int row = 0; row < 600; row++){
+    for(int col = 0; col< 400; col++){
       if(_grid_attr_single[row][col].valid){
         float height_diff = _grid_attr_single[row][col].max_height - _grid_attr_single[row][col].min_height;
         if(height_diff > _obsHeightThreshhold){
@@ -198,8 +194,8 @@ void ObstacleDetection::gridAttrToMatSingle(){
     }
   }
 
-  for(int row=0; row<325; row++){
-    for(int col=0; col<200; col++){
+  for(int row=0; row<600; row++){
+    for(int col=0; col<400; col++){
       if(_grid_attr_single[row][col].attribute == UNKNOWN){
         obs_single.at<cv::Vec3b>(row, col) = cv::Vec3b(0, 0, 0);  //black
       }
@@ -207,15 +203,22 @@ void ObstacleDetection::gridAttrToMatSingle(){
         obs_single.at<cv::Vec3b>(row, col) = cv::Vec3b(50, 50, 50);  //gray
       }
       if(_grid_attr_single[row][col].attribute == OBS){
-        obs_single.at<cv::Vec3b>(row, col) = cv::Vec3b(0, 0, 255);  //black
+        obs_single.at<cv::Vec3b>(row, col) = cv::Vec3b(0, 0, 255);  //red
       }
     }
   }
+
+  //current car position, blue
+  obs_single.at<cv::Vec3b>(449, 199) = cv::Vec3b(255, 0, 0);
+  obs_single.at<cv::Vec3b>(449, 200) = cv::Vec3b(255, 0, 0);
+  obs_single.at<cv::Vec3b>(450, 199) = cv::Vec3b(255, 0, 0);
+  obs_single.at<cv::Vec3b>(450, 200) = cv::Vec3b(255, 0, 0);
+
 }
 
 void ObstacleDetection::gridAttrToMatMulti(){
-  for(int row = 0; row < 325; row++){
-    for(int col = 0; col<200; col++){
+  for(int row = 0; row < 600; row++){
+    for(int col = 0; col < 400; col++){
       if(_grid_attr_multi[row][col].valid){
         float height_diff = _grid_attr_multi[row][col].max_height - _grid_attr_multi[row][col].min_height;
         if(height_diff > _obsHeightThreshhold){
@@ -227,8 +230,8 @@ void ObstacleDetection::gridAttrToMatMulti(){
     }
   }
 
-  for(int row=0; row<325; row++){
-    for(int col=0; col<200; col++){
+  for(int row=0; row<600; row++){
+    for(int col=0; col<400; col++){
       if(_grid_attr_multi[row][col].attribute == UNKNOWN){
         obs_multi.at<cv::Vec3b>(row, col) = cv::Vec3b(0, 0, 0);  //black
       }
@@ -240,6 +243,12 @@ void ObstacleDetection::gridAttrToMatMulti(){
       }
     }
   }
+
+  //current car position, blue
+  obs_multi.at<cv::Vec3b>(449, 199) = cv::Vec3b(255, 0, 0);
+  obs_multi.at<cv::Vec3b>(449, 200) = cv::Vec3b(255, 0, 0);
+  obs_multi.at<cv::Vec3b>(450, 199) = cv::Vec3b(255, 0, 0);
+  obs_multi.at<cv::Vec3b>(450, 200) = cv::Vec3b(255, 0, 0);
 }
 
 void ObstacleDetection::saveResult(){
@@ -258,9 +267,12 @@ void ObstacleDetection::saveResult(){
   ss<<result_save_location<<_sequence<<"_multi.jpg";
   ss>>mat_multi_path;
 
-  cv::imwrite(img_save_path, img);
-  cv::imwrite(mat_single_path, obs_single);
-  cv::imwrite(mat_multi_path, obs_multi);
+  std::vector<int> compression_params;
+  compression_params.push_back(CV_IMWRITE_JPEG_QUALITY);
+  compression_params.push_back(100);  //100 is best quality
+  cv::imwrite(img_save_path, img, compression_params);
+  cv::imwrite(mat_single_path, obs_single, compression_params);
+  cv::imwrite(mat_multi_path, obs_multi, compression_params);
 }
 
 void ObstacleDetection::laserCloudHandler(const sensor_msgs::PointCloud2ConstPtr &laserCloudMsg){

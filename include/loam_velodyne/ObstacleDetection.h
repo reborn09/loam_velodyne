@@ -34,7 +34,7 @@ public:
 class ObstacleDetection{
 
 public:
-  ObstacleDetection(int fusion_num = 5);
+  ObstacleDetection();
   bool setup(ros::NodeHandle& node);
   void spin();
 
@@ -53,7 +53,6 @@ private:
 
 private:
   int _sequence = 0;
-  int _fusion_num;
   int _cur_pos =0; //current positon in _laserCloudStack
 
   ros::Time _timeLaserCloud;
@@ -70,12 +69,12 @@ private:
   std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> _laserCloudStack;
 
   int _grid_size = 20;  //cm
-  float _obsHeightThreshhold = 20.0; //cm
+  float _obsHeightThreshhold = 30.0; //cm
 
-  Grid _grid_attr_single[325][200];  //front 50m, back 15m, left 20m, right 20m, every grid is 20cm
+  Grid _grid_attr_single[600][400];  //front 90m, back 30m, left 40m, right 40m, every grid is 20cm
   cv::Mat obs_single;
 
-  Grid _grid_attr_multi[325][200];
+  Grid _grid_attr_multi[600][400];
   cv::Mat obs_multi;
 
   cv::Mat img;
