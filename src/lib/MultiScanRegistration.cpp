@@ -135,6 +135,8 @@ bool MultiScanRegistration::setupROS(ros::NodeHandle& node, ros::NodeHandle& pri
   // subscribe to input cloud topic
   _subLaserCloud = node.subscribe<sensor_msgs::PointCloud2>
       ("/multi_scan_points", 2, &MultiScanRegistration::handleCloudMessage, this);
+  _subSeqParser = node.subscribe<std_msgs::Int32>
+      ("/seq_parser", 2, &MultiScanRegistration::handleSeqMessage, this);
 
   return true;
 }
@@ -148,15 +150,36 @@ void MultiScanRegistration::handleCloudMessage(const sensor_msgs::PointCloud2Con
     --_systemDelay;
     //return;
   }
-
+  isLaserNew = true;
   // fetch new input cloud
-  pcl::PointCloud<pcl::PointXYZ> laserCloudIn;
+  laserCloudIn.clear();
   pcl::fromROSMsg(*laserCloudMsg, laserCloudIn);
-  sequence = laserCloudMsg->header.seq;
-  process(laserCloudIn, fromROSTime(laserCloudMsg->header.stamp));
+  scanTime = fromROSTime(laserCloudMsg->header.stamp);
 }
 
+void MultiScanRegistration::handleSeqMessage(const std_msgs::Int32ConstPtr &seqIn)
+{
+  isSeqNew = true;
+  imageSeq.data = seqIn->data;
+}
 
+void MultiScanRegistration::spin()
+{
+  ros::Rate rate(100);
+  bool status = ros::ok();
+
+  while(status)
+  {
+    ros::spinOnce();
+    if(isLaserNew && isSeqNew){
+      isLaserNew = false;
+      isSeqNew = false;
+      process(laserCloudIn, scanTime);
+    }
+    status = ros::ok();
+    rate.sleep();
+  }
+}
 
 void MultiScanRegistration::process(const pcl::PointCloud<pcl::PointXYZ>& laserCloudIn, const Time& scanTime)
 {

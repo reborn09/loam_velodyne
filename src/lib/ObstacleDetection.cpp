@@ -1,7 +1,6 @@
 #include "loam_velodyne/ObstacleDetection.h"
 #include "math_utils.h"
 
-
 namespace loam {
 
 ObstacleDetection::ObstacleDetection() :
@@ -27,6 +26,8 @@ bool ObstacleDetection::setup(ros::NodeHandle &node){
       ("/velodyne_cloud_registered", 2, &ObstacleDetection::laserCloudHandler, this);
   _subOdometry = node.subscribe<nav_msgs::Odometry>
       ("/aft_mapped_to_init", 5, &ObstacleDetection::odometryHandler, this);
+  _subImageSeq = node.subscribe<std_msgs::Int32>
+      ("/seq_mapping", 2, &ObstacleDetection::imageSeqHandler, this);
   return true;
 }
 
@@ -51,7 +52,13 @@ void ObstacleDetection::process(){
   //push laser cloud to stack
   _laserCloudStack[_cur_pos]->clear();
   for(auto const& pt : _laserCloud->points){
-    _laserCloudStack[_cur_pos]->push_back(pt);
+    double dist = (pt.x - _transformSum.pos.x()) * (pt.x - _transformSum.pos.x())
+                + (pt.y - _transformSum.pos.y()) * (pt.y - _transformSum.pos.y())
+                + (pt.z - _transformSum.pos.z()) * (pt.z - _transformSum.pos.z());
+    dist = sqrt(dist);
+    if(dist > 2.85){
+      _laserCloudStack[_cur_pos]->push_back(pt);
+    }
   }
   _cur_pos = (_cur_pos+1) % _fusion_num;
 
@@ -87,12 +94,14 @@ void ObstacleDetection::process(){
 }
 
 bool ObstacleDetection::hasNewData(){
-  return _newLaserCloud && _newOdometry && fabs((_timeLaserCloud-_timeOdometry).toSec())<0.005;
+  return _newLaserCloud && _newOdometry && _newImageSeq
+      && fabs((_timeLaserCloud-_timeOdometry).toSec())<0.005;
 }
 
 void ObstacleDetection::reset(){
   _newLaserCloud = false;
   _newOdometry = false;
+  _newImageSeq = false;
 
   //reset mat
   for(int row = 0; row < 600; row++){
@@ -208,11 +217,12 @@ void ObstacleDetection::gridAttrToMatSingle(){
     }
   }
 
-  //current car position, blue
-  obs_single.at<cv::Vec3b>(449, 199) = cv::Vec3b(255, 0, 0);
-  obs_single.at<cv::Vec3b>(449, 200) = cv::Vec3b(255, 0, 0);
-  obs_single.at<cv::Vec3b>(450, 199) = cv::Vec3b(255, 0, 0);
-  obs_single.at<cv::Vec3b>(450, 200) = cv::Vec3b(255, 0, 0);
+  for(int row=445; row<455; row++){
+    for(int col=195; col<205; col++){
+      //current car position, blue
+      obs_single.at<cv::Vec3b>(row, col) = cv::Vec3b(255, 0, 0);
+    }
+  }
 
 }
 
@@ -244,40 +254,62 @@ void ObstacleDetection::gridAttrToMatMulti(){
     }
   }
 
-  //current car position, blue
-  obs_multi.at<cv::Vec3b>(449, 199) = cv::Vec3b(255, 0, 0);
-  obs_multi.at<cv::Vec3b>(449, 200) = cv::Vec3b(255, 0, 0);
-  obs_multi.at<cv::Vec3b>(450, 199) = cv::Vec3b(255, 0, 0);
-  obs_multi.at<cv::Vec3b>(450, 200) = cv::Vec3b(255, 0, 0);
+  for(int row=445; row<455; row++){
+    for(int col=195; col<205; col++){
+      //current car position, blue
+      obs_multi.at<cv::Vec3b>(row, col) = cv::Vec3b(255, 0, 0);
+    }
+  }
+
 }
 
 void ObstacleDetection::saveResult(){
   std::string img_save_path;
   std::string mat_single_path;
   std::string mat_multi_path;
+  std::string cloud_single_path;
+  std::string cloud_multi_path;
   std::stringstream ss;
-  ss<<result_save_location<<_sequence<<"_img.jpg";
+  ss<<result_save_location<<_sequence<<"_img.png";
   ss>>img_save_path;
 
   ss.clear();
-  ss<<result_save_location<<_sequence<<"_single.jpg";
+  ss<<result_save_location<<_sequence<<"_single.png";
   ss>>mat_single_path;
 
   ss.clear();
-  ss<<result_save_location<<_sequence<<"_multi.jpg";
+  ss<<result_save_location<<_sequence<<"_multi.png";
   ss>>mat_multi_path;
 
+  ss.clear();
+  ss<<result_save_location<<_sequence<<"_single.pcd";
+  ss>>cloud_single_path;
+
+  ss.clear();
+  ss<<result_save_location<<_sequence<<"_multi.pcd";
+  ss>>cloud_multi_path;
+
   std::vector<int> compression_params;
-  compression_params.push_back(CV_IMWRITE_JPEG_QUALITY);
-  compression_params.push_back(100);  //100 is best quality
-  cv::imwrite(img_save_path, img, compression_params);
-  cv::imwrite(mat_single_path, obs_single, compression_params);
-  cv::imwrite(mat_multi_path, obs_multi, compression_params);
+  compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
+  compression_params.push_back(0);  //0-9, 0 is best quality
+
+  pcl::PointCloud<pcl::PointXYZI> cloudSum;
+  for(int i=0; i<_fusion_num; i++){
+    cloudSum += *(_laserCloudStack[i]);
+  }
+
+  if(_sequence < 100){
+    cv::imwrite(img_save_path, img, compression_params);
+    cv::imwrite(mat_single_path, obs_single, compression_params);
+    cv::imwrite(mat_multi_path, obs_multi, compression_params);
+    pcl::io::savePCDFileASCII(cloud_single_path, *_laserCloud);
+    pcl::io::savePCDFileASCII(cloud_multi_path, cloudSum);
+
+  }
 }
 
 void ObstacleDetection::laserCloudHandler(const sensor_msgs::PointCloud2ConstPtr &laserCloudMsg){
   _timeLaserCloud = laserCloudMsg->header.stamp;
-  _sequence = laserCloudMsg->header.seq;
   _newLaserCloud = true;
   _laserCloud->clear();
   pcl::fromROSMsg(*laserCloudMsg, *_laserCloud);
@@ -295,6 +327,12 @@ void ObstacleDetection::odometryHandler(const nav_msgs::Odometry::ConstPtr& odom
   _transformSum.pos.x() = float(odometryMsg->pose.pose.position.x);
   _transformSum.pos.y() = float(odometryMsg->pose.pose.position.y);
   _transformSum.pos.z() = float(odometryMsg->pose.pose.position.z);
+}
+
+void ObstacleDetection::imageSeqHandler(const std_msgs::Int32::ConstPtr &seqIn)
+{
+  _newImageSeq = true;
+  _sequence = seqIn->data;
 }
 
 

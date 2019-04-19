@@ -40,6 +40,7 @@
 
 #include <ros/node_handle.h>
 #include <sensor_msgs/Imu.h>
+#include <std_msgs/Int32.h>
 
 #include "BasicScanRegistration.h"
 
@@ -83,7 +84,7 @@ namespace loam
     bool parseParams(const ros::NodeHandle& nh, RegistrationParams& config_out);
 
   public:
-    int sequence = 0; //header sequence, start from 0
+    std_msgs::Int32 imageSeq;
 
   private:
     ros::Subscriber _subImu;                    ///< IMU message subscriber
@@ -93,6 +94,7 @@ namespace loam
     ros::Publisher _pubSurfPointsFlat;          ///< flat surface cloud message publisher
     ros::Publisher _pubSurfPointsLessFlat;      ///< less flat surface cloud message publisher
     ros::Publisher _pubImuTrans;                ///< IMU transformation message publisher
+    ros::Publisher _pubImageSeq;
   };
 
 } // end namespace loam

@@ -13,6 +13,7 @@
 #include <opencv/cv.h>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/core/core.hpp>
+#include <std_msgs/Int32.h>
 #include "loam_velodyne/paremeterUse.h"
 
 namespace loam {
@@ -50,6 +51,7 @@ private:
   void saveResult();
   void laserCloudHandler(const sensor_msgs::PointCloud2ConstPtr& laserCloudMsg);
   void odometryHandler(const nav_msgs::Odometry::ConstPtr& odometryMsg);
+  void imageSeqHandler(const std_msgs::Int32::ConstPtr& seqIn);
 
 private:
   int _sequence = 0;
@@ -60,9 +62,11 @@ private:
 
   bool _newLaserCloud;
   bool _newOdometry;
+  bool _newImageSeq;
 
   ros::Subscriber _subLaserCloud;
   ros::Subscriber _subOdometry;
+  ros::Subscriber _subImageSeq;
 
   Twist _transformSum;
   pcl::PointCloud<pcl::PointXYZI>::Ptr _laserCloud;

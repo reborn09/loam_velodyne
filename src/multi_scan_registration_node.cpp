@@ -13,7 +13,7 @@ int main(int argc, char **argv)
 
   if (multiScan.setup(node, privateNode)) {
     // initialization successful
-    ros::spin();
+    multiScan.spin();
   }
 
   return 0;

@@ -3,6 +3,7 @@
 #include <fstream>
 #include <string>
 #include <sensor_msgs/PointCloud2.h>
+#include <std_msgs/Int32.h>
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
@@ -15,6 +16,7 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "kitti_parser");
     ros::NodeHandle n;
     ros::Publisher velodyne_pub = n.advertise<sensor_msgs::PointCloud2> ("/velodyne_points", 2);
+    ros::Publisher seq_pub = n.advertise<std_msgs::Int32>("/seq_parser", 2);
 
     //pub frequence
     ros::Rate loop_rate(frequence);
@@ -88,10 +90,13 @@ int main(int argc, char **argv)
         sensor_msgs::PointCloud2 output64;
         pcl::toROSMsg(cloud64,output64);
 
-        output64.header.seq = i;
         output64.header.frame_id="/velodyne";
         output64.header.stamp=ros::Time::now();
         velodyne_pub.publish(output64);
+
+        std_msgs::Int32  image_seq;
+        image_seq.data = i;
+        seq_pub.publish(image_seq);
 
         ros::spinOnce();
         loop_rate.sleep();

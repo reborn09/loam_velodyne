@@ -154,6 +154,7 @@ bool ScanRegistration::setupROS(ros::NodeHandle& node, ros::NodeHandle& privateN
   _pubCornerPointsLessSharp = node.advertise<sensor_msgs::PointCloud2>("/laser_cloud_less_sharp", 2);
   _pubSurfPointsFlat        = node.advertise<sensor_msgs::PointCloud2>("/laser_cloud_flat", 2);
   _pubSurfPointsLessFlat    = node.advertise<sensor_msgs::PointCloud2>("/laser_cloud_less_flat", 2);
+  _pubImageSeq              = node.advertise<std_msgs::Int32>("/seq_extract", 2);
   _pubImuTrans              = node.advertise<sensor_msgs::PointCloud2>("/imu_trans", 5);
 
   return true;
@@ -188,14 +189,14 @@ void ScanRegistration::publishResult()
 {
   auto sweepStartTime = toROSTime(sweepStart());
   // publish full resolution and feature point clouds
-  publishCloudMsg(_pubLaserCloud, laserCloud(), sweepStartTime, "/camera", sequence);
-  publishCloudMsg(_pubCornerPointsSharp, cornerPointsSharp(), sweepStartTime, "/camera", sequence);
-  publishCloudMsg(_pubCornerPointsLessSharp, cornerPointsLessSharp(), sweepStartTime, "/camera", sequence);
-  publishCloudMsg(_pubSurfPointsFlat, surfacePointsFlat(), sweepStartTime, "/camera", sequence);
-  publishCloudMsg(_pubSurfPointsLessFlat, surfacePointsLessFlat(), sweepStartTime, "/camera", sequence);
-
+  publishCloudMsg(_pubLaserCloud, laserCloud(), sweepStartTime, "/camera");
+  publishCloudMsg(_pubCornerPointsSharp, cornerPointsSharp(), sweepStartTime, "/camera");
+  publishCloudMsg(_pubCornerPointsLessSharp, cornerPointsLessSharp(), sweepStartTime, "/camera");
+  publishCloudMsg(_pubSurfPointsFlat, surfacePointsFlat(), sweepStartTime, "/camera");
+  publishCloudMsg(_pubSurfPointsLessFlat, surfacePointsLessFlat(), sweepStartTime, "/camera");
+  _pubImageSeq.publish(imageSeq);
   // publish corresponding IMU transformation information
-  publishCloudMsg(_pubImuTrans, imuTransform(), sweepStartTime, "/camera", 0);
+  publishCloudMsg(_pubImuTrans, imuTransform(), sweepStartTime, "/camera");
 }
 
 } // end namespace loam

@@ -142,6 +142,7 @@ namespace loam
     _pubLaserCloudSurfLast = node.advertise<sensor_msgs::PointCloud2>("/laser_cloud_surf_last", 2);
     _pubLaserCloudFullRes = node.advertise<sensor_msgs::PointCloud2>("/velodyne_cloud_3", 2);
     _pubLaserOdometry = node.advertise<nav_msgs::Odometry>("/laser_odom_to_init", 5);
+    _pubImageSeq = node.advertise<std_msgs::Int32>("/seq_odometry", 2);
 
     // subscribe to scan registration topics
     _subCornerPointsSharp = node.subscribe<sensor_msgs::PointCloud2>
@@ -162,6 +163,9 @@ namespace loam
     _subImuTrans = node.subscribe<sensor_msgs::PointCloud2>
       ("/imu_trans", 5, &LaserOdometry::imuTransHandler, this);
 
+    _subImageSeq = node.subscribe<std_msgs::Int32>
+      ("/seq_extract", 2, &LaserOdometry::imageSeqHandler, this);
+
     return true;
   }
 
@@ -173,6 +177,7 @@ namespace loam
     _newSurfPointsLessFlat = false;
     _newLaserCloudFullRes = false;
     _newImuTrans = false;
+    _newImageSeq = false;
   }
 
   void LaserOdometry::laserCloudSharpHandler(const sensor_msgs::PointCloud2ConstPtr& cornerPointsSharpMsg)
@@ -230,7 +235,6 @@ namespace loam
   void LaserOdometry::laserCloudFullResHandler(const sensor_msgs::PointCloud2ConstPtr& laserCloudFullResMsg)
   {
     _timeLaserCloudFullRes = laserCloudFullResMsg->header.stamp;
-    sequence = laserCloudFullResMsg->header.seq;
     laserCloud()->clear();
     pcl::fromROSMsg(*laserCloudFullResMsg, *laserCloud());
     std::vector<int> indices;
@@ -250,6 +254,11 @@ namespace loam
     _newImuTrans = true;
   }
 
+  void LaserOdometry::imageSeqHandler(const std_msgs::Int32ConstPtr &seqIn)
+  {
+    _newImageSeq = true;
+    imageSeq.data = seqIn->data;
+  }
 
   void LaserOdometry::spin()
   {
@@ -273,7 +282,7 @@ namespace loam
   bool LaserOdometry::hasNewData()
   {
     return _newCornerPointsSharp && _newCornerPointsLessSharp && _newSurfPointsFlat &&
-      _newSurfPointsLessFlat && _newLaserCloudFullRes && _newImuTrans &&
+      _newSurfPointsLessFlat && _newLaserCloudFullRes && _newImuTrans && _newImageSeq &&
       fabs((_timeCornerPointsSharp - _timeSurfPointsLessFlat).toSec()) < 0.005 &&
       fabs((_timeCornerPointsLessSharp - _timeSurfPointsLessFlat).toSec()) < 0.005 &&
       fabs((_timeSurfPointsFlat - _timeSurfPointsLessFlat).toSec()) < 0.005 &&
@@ -302,7 +311,6 @@ namespace loam
                                                                                -transformSum().rot_y.rad());
 
     _laserOdometryMsg.header.stamp            = _timeSurfPointsLessFlat;
-    _laserOdometryMsg.header.seq              = sequence;
     _laserOdometryMsg.pose.pose.orientation.x = -geoQuat.y;
     _laserOdometryMsg.pose.pose.orientation.y = -geoQuat.z;
     _laserOdometryMsg.pose.pose.orientation.z = geoQuat.x;
@@ -321,11 +329,12 @@ namespace loam
     if (_ioRatio < 2 || frameCount() % _ioRatio == 1)
     {
       ros::Time sweepTime = _timeSurfPointsLessFlat;
-      publishCloudMsg(_pubLaserCloudCornerLast, *lastCornerCloud(), sweepTime, "/camera", sequence);
-      publishCloudMsg(_pubLaserCloudSurfLast, *lastSurfaceCloud(), sweepTime, "/camera", sequence);
+      publishCloudMsg(_pubLaserCloudCornerLast, *lastCornerCloud(), sweepTime, "/camera");
+      publishCloudMsg(_pubLaserCloudSurfLast, *lastSurfaceCloud(), sweepTime, "/camera");
 
       transformToEnd(laserCloud());  // transform full resolution cloud to sweep end before sending it
-      publishCloudMsg(_pubLaserCloudFullRes, *laserCloud(), sweepTime, "/camera", sequence);
+      publishCloudMsg(_pubLaserCloudFullRes, *laserCloud(), sweepTime, "/camera");
+      _pubImageSeq.publish(imageSeq);
     }
   }
 

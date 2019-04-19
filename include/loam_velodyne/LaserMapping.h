@@ -41,6 +41,7 @@
 #include <nav_msgs/Odometry.h>
 #include <sensor_msgs/Imu.h>
 #include <sensor_msgs/PointCloud2.h>
+#include <std_msgs/Int32.h>
 #include <tf/transform_datatypes.h>
 #include <tf/transform_broadcaster.h>
 
@@ -92,6 +93,8 @@ public:
     */
    void imuHandler(const sensor_msgs::Imu::ConstPtr& imuIn);
 
+   void seqHandler(const std_msgs::Int32::ConstPtr& seqIn);
+
    /** \brief Process incoming messages in a loop until shutdown (used in active mode). */
    void spin();
 
@@ -110,7 +113,7 @@ protected:
    void publishResult();
 
 private:
-   int sequence = 0;  //header sequence, start from 0
+   std_msgs::Int32 imageSeq;
    ros::Time _timeLaserCloudCornerLast;   ///< time of current last corner cloud
    ros::Time _timeLaserCloudSurfLast;     ///< time of current last surface cloud
    ros::Time _timeLaserCloudFullRes;      ///< time of current full resolution cloud
@@ -120,6 +123,7 @@ private:
    bool _newLaserCloudSurfLast;    ///< flag if a new last surface cloud has been received
    bool _newLaserCloudFullRes;     ///< flag if a new full resolution cloud has been received
    bool _newLaserOdometry;         ///< flag if a new laser odometry has been received
+   bool _newImageSeq;
 
 
    nav_msgs::Odometry _odomAftMapped;      ///< mapping odometry message
@@ -128,6 +132,7 @@ private:
    ros::Publisher _pubLaserCloudSurround;    ///< map cloud message publisher
    ros::Publisher _pubLaserCloudFullRes;     ///< current full resolution cloud message publisher
    ros::Publisher _pubOdomAftMapped;         ///< mapping odometry publisher
+   ros::Publisher _pubImageSeq;
    tf::TransformBroadcaster _tfBroadcaster;  ///< mapping odometry transform broadcaster
 
    ros::Subscriber _subLaserCloudCornerLast;   ///< last corner cloud message subscriber
@@ -135,6 +140,7 @@ private:
    ros::Subscriber _subLaserCloudFullRes;      ///< full resolution cloud message subscriber
    ros::Subscriber _subLaserOdometry;          ///< laser odometry message subscriber
    ros::Subscriber _subImu;                    ///< IMU message subscriber
+   ros::Subscriber _subImageSeq;
 };
 
 } // end namespace loam
