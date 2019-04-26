@@ -5,7 +5,7 @@
 
 //#define SAVE_PARSER_LIDAR
 #define SAVE_RESULT
-int frequence = 2;
+int frequence = 1;
 int _fusion_num = 10;
 std::string lidar_base_dir = "/home/jiapengz/data/kitti/data_odometry_velodyne/dataset/sequences/";
 std::string sequence = "05";

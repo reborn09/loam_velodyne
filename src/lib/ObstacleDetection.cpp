@@ -87,10 +87,10 @@ void ObstacleDetection::process(){
   saveResult();
 #endif
 
-  cv::imshow("image", img);
-  cv::imshow("single", obs_single);
-  cv::imshow("multi", obs_multi);
-  cv::waitKey(3);
+//  cv::imshow("image", img);
+//  cv::imshow("single", obs_single);
+//  cv::imshow("multi", obs_multi);
+//  cv::waitKey(3);
 }
 
 bool ObstacleDetection::hasNewData(){
@@ -298,14 +298,11 @@ void ObstacleDetection::saveResult(){
     cloudSum += *(_laserCloudStack[i]);
   }
 
-  if(_sequence < 100){
-    cv::imwrite(img_save_path, img, compression_params);
-    cv::imwrite(mat_single_path, obs_single, compression_params);
-    cv::imwrite(mat_multi_path, obs_multi, compression_params);
-    pcl::io::savePCDFileASCII(cloud_single_path, *_laserCloud);
-    pcl::io::savePCDFileASCII(cloud_multi_path, cloudSum);
-
-  }
+  cv::imwrite(img_save_path, img, compression_params);
+  cv::imwrite(mat_single_path, obs_single, compression_params);
+  cv::imwrite(mat_multi_path, obs_multi, compression_params);
+  //pcl::io::savePCDFileASCII(cloud_single_path, *_laserCloud);
+  //pcl::io::savePCDFileASCII(cloud_multi_path, cloudSum);
 }
 
 void ObstacleDetection::laserCloudHandler(const sensor_msgs::PointCloud2ConstPtr &laserCloudMsg){
