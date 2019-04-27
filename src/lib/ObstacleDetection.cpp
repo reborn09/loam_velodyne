@@ -14,11 +14,32 @@ ObstacleDetection::ObstacleDetection() :
   obs_single = cv::Mat::zeros(600, 400, CV_8UC3);
   obs_multi = cv::Mat::zeros(600, 400, CV_8UC3);
 
-  std::stringstream ss;
-  ss<<img_base_dir<<sequence<<"/image_2/";
-  ss>>img_path;
-  read_filelists(img_path, file_lists, "png");
-  sort_filelists(file_lists, "png");
+  // 读取所有文件序号
+  std::string HDL32Dir = base_dir+"/LIDAR_DATA/"+folder;
+  DIR *dir;
+  struct dirent *ptr;
+  if ((dir=opendir(HDL32Dir.c_str())) == NULL)
+  {
+    std::cerr<<"Open dir error..."<<std::endl;
+    exit(1);
+  }
+  while ((ptr=readdir(dir)) != NULL)
+  {
+    if(strcmp(ptr->d_name,".")==0 || strcmp(ptr->d_name,"..")==0)    //current dir OR parrent dir
+      continue;
+    else if(ptr->d_type == 8)   //file
+    {
+      std::string name(ptr->d_name);
+      name.erase(0,6);        // erase the prefix "Lidar_"
+      int pos = name.find(".bin");
+      name.erase(pos, 4);     // erase the subfix ".bin"
+      frameNo.push_back(name);
+    }
+    else
+      continue;
+  }
+  closedir(dir);
+  sort(frameNo.begin(), frameNo.end());   // 升序排列，表示时间顺序
 }
 
 bool ObstacleDetection::setup(ros::NodeHandle &node){
@@ -80,17 +101,24 @@ void ObstacleDetection::process(){
   }
   gridAttrToMatMulti();
 
-  std::string file_path = img_path + file_lists[_sequence];
+  std::stringstream ss;
+  std::string file_path;
+  ss << base_dir <<"/IMG_DATA/" << folder << "/ImgColor_" <<frameNo[_sequence] <<".jpg";
+  ss >> file_path;
   img = cv::imread(file_path);
 
 #ifdef SAVE_RESULT
   saveResult();
 #endif
 
-//  cv::imshow("image", img);
-//  cv::imshow("single", obs_single);
-//  cv::imshow("multi", obs_multi);
-//  cv::waitKey(3);
+  if(!img.empty()){
+    cv::imshow("image", img);
+  }else{
+    std::cout<<"No Such IMG: "<<file_path<<std::endl;
+  }
+  cv::imshow("single", obs_single);
+  cv::imshow("multi", obs_multi);
+  cv::waitKey(3);
 }
 
 bool ObstacleDetection::hasNewData(){
@@ -149,8 +177,8 @@ void ObstacleDetection::pointToOrigin(const pcl::PointXYZI &pi, pcl::PointXYZI &
 
 void ObstacleDetection::projectPointToGridSingle(pcl::PointXYZI pi){
   //int use floor, int(-0.1) = -1
-  int row = 449 - int(pi.x*100.0/_grid_size);
-  int col = 199 - int(pi.y*100.0/_grid_size);
+  int row = 449 - int(pi.y*100.0/_grid_size);
+  int col = 199 + int(pi.x*100.0/_grid_size);
 
   if(0<=row && row<600 && 0<=col && col<399){
     if(_grid_attr_single[row][col].valid == false){
@@ -170,8 +198,8 @@ void ObstacleDetection::projectPointToGridSingle(pcl::PointXYZI pi){
 
 void ObstacleDetection::projectPointToGridMulti(pcl::PointXYZI pi){
   //int use floor, int(-0.1) = -1
-  int row = 449 - int(pi.x*100.0/_grid_size);
-  int col = 199 - int(pi.y*100.0/_grid_size);
+  int row = 449 - int(pi.y*100.0/_grid_size);
+  int col = 199 + int(pi.x*100.0/_grid_size);
 
   if(0<=row && row<600 && 0<=col && col<400){
     if(_grid_attr_multi[row][col].valid == false){

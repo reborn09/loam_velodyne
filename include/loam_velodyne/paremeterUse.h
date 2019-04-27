@@ -2,50 +2,30 @@
 #define PAREMETERUSE_H
 
 #include <string>
+#include <vector>
+#include <dirent.h>
+#include <algorithm>
 
 //#define SAVE_PARSER_LIDAR
-#define SAVE_RESULT
-int frequence = 1;
-int _fusion_num = 10;
-std::string lidar_base_dir = "/home/jiapengz/data/kitti/data_odometry_velodyne/dataset/sequences/";
-std::string sequence = "05";
-std::string save_lidar_location = "/home/jiapengz/data/lidar_save/";
+//#define SAVE_RESULT
+const int frequence = 1;
+const int _fusion_num = 10;
+const int startFrameNo = 0;
+const int endFrameNo = 100000;
 
-std::string img_base_dir = "/home/jiapengz/data/kitti/data_odometry_color/dataset/sequences/";
-std::string result_save_location = "/home/jiapengz/data/result_save/";
+//std::vector<std::string> frameNo;
 
+const std::string base_dir = "/home/jiapengz/data/alv_data";
+const std::string folder = "1122_1426";
+const std::string lidar32_para_location = "/home/jiapengz/data/alv_data/parameters";
+const std::string save_lidar_location = "/home/jiapengz/data/lidar_save/";
+const std::string img_base_dir = "/home/jiapengz/data/kitti/data_odometry_color/dataset/sequences/";
+const std::string result_save_location = "/home/jiapengz/data/result_save/";
 
-void read_filelists(const std::string& dir_path,std::vector<std::string>& out_filelsits,std::string type)
-{
-    struct dirent *ptr;
-    DIR *dir;
-    dir = opendir(dir_path.c_str());
-    out_filelsits.clear();
-    while ((ptr = readdir(dir)) != NULL){
-        std::string tmp_file = ptr->d_name;
-        if (tmp_file[0] == '.')continue;
-        if (type.size() <= 0){
-            out_filelsits.push_back(ptr->d_name);
-        }else{
-            if (tmp_file.size() < type.size())continue;
-            std::string tmp_cut_type = tmp_file.substr(tmp_file.size() - type.size(),type.size());
-            if (tmp_cut_type == type){
-                out_filelsits.push_back(ptr->d_name);
-            }
-        }
-    }
-}
+void read_filelists(const std::string& dir_path,std::vector<std::string>& out_filelsits,std::string type);
 
-bool computePairNum(std::string pair1,std::string pair2)
-{
-    return pair1 < pair2;
-}
+bool computePairNum(std::string pair1,std::string pair2);
 
-void sort_filelists(std::vector<std::string>& filists,std::string type)
-{
-    if (filists.empty())return;
-
-    std::sort(filists.begin(),filists.end(),computePairNum);
-}
+void sort_filelists(std::vector<std::string>& filists,std::string type);
 
 #endif // PAREMETERUSE_H

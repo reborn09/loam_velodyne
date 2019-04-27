@@ -15,6 +15,7 @@
 #include <opencv2/core/core.hpp>
 #include <std_msgs/Int32.h>
 #include "loam_velodyne/paremeterUse.h"
+#include <sstream>
 
 namespace loam {
 
@@ -84,7 +85,7 @@ private:
   cv::Mat img;
 
   std::string img_path;
-  std::vector<std::string> file_lists;
+  std::vector<std::string> frameNo;
 
 };
 

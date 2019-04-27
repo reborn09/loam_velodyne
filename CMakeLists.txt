@@ -41,8 +41,8 @@ add_definitions( -march=native )
 
 add_subdirectory(src/lib)
 
-add_executable(kitti_parser src/kitti_parser_node.cpp)
-target_link_libraries(kitti_parser ${catkin_LIBRARIES} ${PCL_LIBRARIES} loam )
+add_executable(hdl_parser src/hdl_parser_node.cpp)
+target_link_libraries(hdl_parser ${catkin_LIBRARIES} ${PCL_LIBRARIES} loam )
 
 add_executable(multiScanRegistration src/multi_scan_registration_node.cpp)
 target_link_libraries(multiScanRegistration ${catkin_LIBRARIES} ${PCL_LIBRARIES} loam )

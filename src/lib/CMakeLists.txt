@@ -9,5 +9,7 @@ add_library(loam
             BasicLaserMapping.cpp
             TransformMaintenance.cpp
 	    BasicTransformMaintenance.cpp
-	    ObstacleDetection.cpp)
+	    ObstacleDetection.cpp
+	    velodyne_points_parser.cpp
+	    parameterUse.cpp)
 target_link_libraries(loam ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBRARIES})
