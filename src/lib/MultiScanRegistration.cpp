@@ -252,7 +252,8 @@ void MultiScanRegistration::process(const pcl::PointCloud<pcl::PointXYZ>& laserC
     }
 
     // calculate relative scan time based on point orientation
-    float relTime = config().scanPeriod * (ori - startOri) / (endOri - startOri);
+    //float relTime = config().scanPeriod * (ori - startOri) / (endOri - startOri);
+    float relTime = point.intensity - (int)point.intensity;
     point.intensity = scanID + relTime;
 
     projectPointToStartOfSweep(point, relTime);

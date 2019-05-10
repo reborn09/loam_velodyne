@@ -6,9 +6,8 @@
 #include <dirent.h>
 #include <algorithm>
 
-//#define SAVE_PARSER_LIDAR
-//#define SAVE_RESULT
-const int frequence = 1;
+#define SAVE_RESULT
+const int frequence = 10;
 const int _fusion_num = 10;
 const int startFrameNo = 0;
 const int endFrameNo = 100000;
@@ -16,7 +15,7 @@ const int endFrameNo = 100000;
 //std::vector<std::string> frameNo;
 
 const std::string base_dir = "/home/jiapengz/data/alv_data";
-const std::string folder = "1122_1426";
+const std::string folder = "1124_1016";
 const std::string lidar32_para_location = "/home/jiapengz/data/alv_data/parameters";
 const std::string save_lidar_location = "/home/jiapengz/data/lidar_save/";
 const std::string img_base_dir = "/home/jiapengz/data/kitti/data_odometry_color/dataset/sequences/";
