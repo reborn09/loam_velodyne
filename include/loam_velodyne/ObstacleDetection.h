@@ -36,6 +36,7 @@ class ObstacleDetection{
 
 public:
   ObstacleDetection();
+  ~ObstacleDetection();
   bool setup(ros::NodeHandle& node);
   void spin();
 
@@ -44,10 +45,9 @@ private:
   bool hasNewData();
   void reset();
   void pointToOrigin(const pcl::PointXYZI& pi, pcl::PointXYZI& po);
-  void projectPointToGridSingle(pcl:: PointXYZI pi);
-  void projectPointToGridMulti(pcl:: PointXYZI pi);
-  void gridAttrToMatSingle();
-  void gridAttrToMatMulti();
+  void projectPointToGrid(pcl::PointXYZI pi, Grid** _grid_attr);
+  void gridAttrToMat(Grid** _grid_attr, cv::Mat& img);
+  void griddiffer();
   void saveResult();
   void laserCloudHandler(const sensor_msgs::PointCloud2ConstPtr& laserCloudMsg);
   void odometryHandler(const nav_msgs::Odometry::ConstPtr& odometryMsg);
@@ -75,11 +75,17 @@ private:
   int _grid_size = 20;  //cm
   float _obsHeightThreshhold = 30.0; //cm
 
-  Grid _grid_attr_single[600][400];  //front 90m, back 30m, left 40m, right 40m, every grid is 20cm
+  //600*400
+  Grid** _grid_attr_single = NULL;  //current front 90m, back 30m, left 40m, right 40m, every grid is 20cm
   cv::Mat obs_single;
 
-  Grid _grid_attr_multi[600][400];
+  Grid** _grid_attr_multi = NULL;
   cv::Mat obs_multi;
+
+  Grid** _grid_attr_pre = NULL;
+  cv::Mat obs_pre;
+
+  cv::Mat obs_differ;
 
   cv::Mat img;
 

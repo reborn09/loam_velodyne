@@ -4,8 +4,8 @@
 #include <string>
 
 //#define SAVE_PARSER_LIDAR
-#define SAVE_RESULT
-int frequence = 1;
+//#define SAVE_RESULT
+int frequence = 10;
 int _fusion_num = 10;
 std::string lidar_base_dir = "/home/jiapengz/data/kitti/data_odometry_velodyne/dataset/sequences/";
 std::string sequence = "05";
@@ -14,6 +14,11 @@ std::string save_lidar_location = "/home/jiapengz/data/lidar_save/";
 std::string img_base_dir = "/home/jiapengz/data/kitti/data_odometry_color/dataset/sequences/";
 std::string result_save_location = "/home/jiapengz/data/result_save/";
 
+//grid range, dimension m
+int range_front = 90;
+int range_back = 30;
+int range_left = 40;
+int range_right = 40;
 
 void read_filelists(const std::string& dir_path,std::vector<std::string>& out_filelsits,std::string type)
 {
