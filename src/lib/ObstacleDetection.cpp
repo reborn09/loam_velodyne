@@ -35,6 +35,8 @@ ObstacleDetection::ObstacleDetection() :
   obs_pre = cv::Mat::zeros(row, col, CV_8UC3);
   obs_differ = cv::Mat::zeros(row, col, CV_8UC3);
 
+  obs_cluster = cv::Mat::zeros(row, col, CV_8UC1);
+
   std::stringstream ss;
   ss<<img_base_dir<<sequence<<"/image_2/";
   ss>>img_path;
@@ -103,7 +105,6 @@ void ObstacleDetection::process(){
     }
   }
 
-
   pcl::PointXYZI pointsel;
 
   //process single frame
@@ -112,6 +113,7 @@ void ObstacleDetection::process(){
     projectPointToGrid(pointsel, _grid_attr_single);
   }
   gridAttrToMat(_grid_attr_single, obs_single);
+  cluster(_grid_attr_single, obs_cluster, obs_single);
 
   int _pre_pos = _cur_pos - 1;
   if(_pre_pos < 0){
@@ -143,9 +145,10 @@ void ObstacleDetection::process(){
 
   cv::imshow("image", img);
   cv::imshow("single", obs_single);
-  cv::imshow("multi", obs_multi);
+  cv::imshow("cluster", obs_cluster);
+  //cv::imshow("multi", obs_multi);
   //cv::imshow("pre", obs_pre);
-  cv::imshow("differ",obs_differ);
+  //cv::imshow("differ",obs_differ);
   cv::waitKey(3);
 
   _cur_pos = (_cur_pos+1) % _fusion_num;
@@ -176,6 +179,7 @@ void ObstacleDetection::reset(){
     for(int j = 0; j < col; j++){
       _grid_attr_single[i][j].valid = false;
       _grid_attr_single[i][j].attribute = UNKNOWN;
+      _grid_attr_single[i][j].cloud.clear();
     }
   }
 
@@ -189,6 +193,7 @@ void ObstacleDetection::reset(){
     for(int j = 0; j < col; j++){
       _grid_attr_multi[i][j].valid = false;
       _grid_attr_multi[i][j].attribute = UNKNOWN;
+      _grid_attr_multi[i][j].cloud.clear();
     }
   }
 
@@ -202,12 +207,19 @@ void ObstacleDetection::reset(){
     for(int j = 0; j < col; j++){
       _grid_attr_pre[i][j].valid = false;
       _grid_attr_pre[i][j].attribute = UNKNOWN;
+      _grid_attr_pre[i][j].cloud.clear();
     }
   }
 
   for(int i = 0; i < row; i++){
     for(int j = 0; j < col; j++){
       obs_differ.at<cv::Vec3b>(i, j) = cv::Vec3b(0, 0, 0);  //black
+    }
+  }
+
+  for(int i = 0; i<row; i++){
+    for(int j = 0; j < col; j++){
+      obs_cluster.at<uchar>(i, j) = 0; //black
     }
   }
 }
@@ -247,6 +259,7 @@ void ObstacleDetection::projectPointToGrid(pcl::PointXYZI pi, Grid** _grid_attr)
         _grid_attr[row][col].max_height = 100.0*pi.z;
       }
     }
+    _grid_attr[row][col].cloud.push_back(pi);
   }
 
 }
@@ -268,6 +281,61 @@ void ObstacleDetection::gridAttrToMat(Grid** _grid_attr, cv::Mat& img){
     }
   }
 
+  //find car top
+  for(int i = 0; i <row; i++){
+    for(int j = 0; j < col; j++){
+      if(_grid_attr[i][j].valid && _grid_attr[i][j].attribute != OBS){
+        float ground_height = 0;
+        int count = 0 ;
+        for(int loop1 = i - ground_win_size;loop1<=i+ground_win_size; loop1++){
+          for(int loop2 = j - ground_win_size; loop2<=j+ground_win_size; loop2++){
+            if(loop1>=0 && loop1<row && loop2>=0 && loop2 <col){
+              if(_grid_attr[loop1][loop2].attribute == FLAT){
+                ground_height += _grid_attr[loop1][loop2].min_height;
+                count++;
+              }
+            }
+          }
+        }
+        if(count >= 1){
+          ground_height /= count;
+          if(_grid_attr[i][j].max_height - ground_height > _cartopHeightThreshhold){
+            //_grid_attr[i][j].attribute = CAR_TOP;
+            _grid_attr[i][j].attribute = OBS;
+          }
+        }
+      }
+    }
+  }
+
+  //find suspend
+  for(int i = 0; i < row; i++){
+    for(int j = 0; j < col; j++){
+      if(_grid_attr[i][j].attribute == OBS){
+        sort(_grid_attr[i][j].cloud.begin(),
+             _grid_attr[i][j].cloud.end(),
+             [](const pcl::PointXYZI &p1, const pcl::PointXYZI &p2)->bool{return p1.z < p2.z;});
+        int count = _grid_attr[i][j].cloud.size();
+        if(count > 0){
+          float h_pre = _grid_attr[i][j].cloud[0].z*100.0;
+          float h_now = _grid_attr[i][j].cloud[0].z*100.0;
+          float h_dis = h_now - h_pre;
+          for(int index = 0; index<count; index++){
+            h_now = _grid_attr[i][j].cloud[index].z*100.0;
+            h_dis = h_now - h_pre;
+            if(h_dis > _susHeightThreshhold){
+              //_grid_attr[i][j].attribute = SUSPEND;
+              _grid_attr[i][j].attribute = FLAT;
+              break;
+            }
+            h_pre = _grid_attr[i][j].cloud[index].z*100.0;
+          }
+        }
+      }
+    }
+  }
+
+  //draw
   for(int i=0; i<row; i++){
     for(int j=0; j<col; j++){
       if(_grid_attr[i][j].attribute == UNKNOWN){
@@ -278,6 +346,30 @@ void ObstacleDetection::gridAttrToMat(Grid** _grid_attr, cv::Mat& img){
       }
       if(_grid_attr[i][j].attribute == OBS){
         img.at<cv::Vec3b>(i, j) = cv::Vec3b(0, 0, 255);  //red
+
+        //
+      }
+      if(_grid_attr[i][j].attribute == SUSPEND){
+        img.at<cv::Vec3b>(i, j) = cv::Vec3b(255, 0, 0);  //blue
+        //img.at<cv::Vec3b>(i, j) = cv::Vec3b(50, 50, 50);  //gray
+      }
+      if(_grid_attr[i][j].attribute == CAR_TOP){
+        img.at<cv::Vec3b>(i, j) = cv::Vec3b(0, 255, 255);  //yellow
+      }
+    }
+  }
+
+  //expand grid
+  for(int i =0; i<row; i++){
+    for(int j=0; j<col; j++){
+      if(_grid_attr[i][j].attribute == OBS){
+        for(int loop1 = i - exp_grid_size; loop1 <= i + exp_grid_size; loop1++){
+          for(int loop2 = j - exp_grid_size; loop2 <= j + exp_grid_size; loop2++){
+            if(loop1>=0 && loop1<row && loop2>=0 && loop2<col){
+              img.at<cv::Vec3b>(loop1,loop2) = cv::Vec3b(0, 0, 255);
+            }
+          }
+        }
       }
     }
   }
@@ -291,10 +383,54 @@ void ObstacleDetection::gridAttrToMat(Grid** _grid_attr, cv::Mat& img){
 
 }
 
+void ObstacleDetection::cluster(Grid** _grid_attr, cv::Mat& img_gray, cv::Mat& img_color){
+  int row = 5*(range_front+range_back);
+  int col = 5*(range_left+range_right);
+
+  for(int i = 0; i<row; i++){
+    for(int j = 0; j<col; j++){
+      if(_grid_attr[i][j].attribute == OBS){
+        for(int loop1 = i - exp_grid_size; loop1 <= i + exp_grid_size; loop1++){
+          for(int loop2 = j - exp_grid_size; loop2 <= j + exp_grid_size; loop2++){
+            if(loop1>=0 && loop1<row && loop2>=0 && loop2<col){
+              img_gray.at<uchar>(loop1, loop2) = 255;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  //findcontours
+  std::vector<std::vector<cv::Point>> contours;
+  std::vector<cv::Vec4i> hierarchy;
+  cv::findContours(img_gray, contours, hierarchy, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE);
+  //blue
+  //cv::drawContours(img_color, contours, -1, cv::Scalar(255, 0, 0), 1, cv::LINE_AA, hierarchy);
+  for(int i =0; i < contours.size(); i++){
+    std::vector<cv::Point> points;
+    for(int j =0; j<contours[i].size(); j++){
+      points.push_back(contours[i][j]);
+    }
+    cv::RotatedRect box = cv::minAreaRect(points);
+    double area = box.size.width * box.size.height;
+    if(area > 40 && area < 500){
+      cv::Point2f vtx[4];
+      box.points(vtx);
+      for(int k=0; k<4; k++){
+        cv::line(img_color, vtx[k], vtx[(k+1)%4], cv::Scalar(255,0,0), 1, cv::LINE_AA);
+      }
+    }
+  }
+}
+
 void ObstacleDetection::griddiffer(){
   int row = 5*(range_front+range_back);
   int col = 5*(range_left+range_right);
 
+
+  int win_size = 1;
+  int win_thresh = 1;
   for(int i=0; i<row; i++){
     for(int j=0; j<col; j++){
       if(_grid_attr_pre[i][j].attribute == OBS && _grid_attr_single[i][j].attribute != OBS){
@@ -302,13 +438,31 @@ void ObstacleDetection::griddiffer(){
       }else{
         obs_differ.at<cv::Vec3b>(i, j) = cv::Vec3b(0, 0, 0);  //black
       }
-    }
+//      int count = 0;
+//      if(_grid_attr_pre[i][j].attribute == OBS){
+//        for(int loop1 = i - win_size; loop1 <= i + win_size; loop1++){
+//          for(int loop2 = j - win_size; loop2 <= j + win_size; loop2++){
+//            if(loop1>=0 && loop1 < row && loop2 >= 0 && loop2 < col){
+//              if(_grid_attr_single[loop1][loop2].attribute == OBS){
+//                count++;
+//              }
+//            }
+//          }
+//        }
+//        if(count >= win_thresh){
+//          obs_differ.at<cv::Vec3b>(i, j) = cv::Vec3b(0, 0, 0);  //black
+//        }else{
+//          obs_differ.at<cv::Vec3b>(i, j) = cv::Vec3b(0, 0, 255);  //red
+//        }
+//      }
+//    }
   }
 
-  for(int i=5*range_front -5; i<5*range_front+5; i++){
-    for(int j=5*range_left-5; j<5*range_left+5; j++){
-      //current car position, blue
-      obs_differ.at<cv::Vec3b>(i, j) = cv::Vec3b(255, 0, 0);
+    for(int i=5*range_front -5; i<5*range_front+5; i++){
+      for(int j=5*range_left-5; j<5*range_left+5; j++){
+        //current car position, blue
+        obs_differ.at<cv::Vec3b>(i, j) = cv::Vec3b(255, 0, 0);
+      }
     }
   }
 }
@@ -320,6 +474,7 @@ void ObstacleDetection::saveResult(){
   std::string cloud_single_path;
   std::string cloud_multi_path;
   std::string mat_diff_path;
+  std::string obs_cluster_path;
   std::stringstream ss;
   ss<<result_save_location<<_sequence<<"_img.png";
   ss>>img_save_path;
@@ -344,6 +499,10 @@ void ObstacleDetection::saveResult(){
   ss<<result_save_location<<_sequence<<"_diff.png";
   ss>>mat_diff_path;
 
+  ss.clear();
+  ss<<result_save_location<<_sequence<<"_gray.png";
+  ss>>obs_cluster_path;
+
   std::vector<int> compression_params;
   compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
   compression_params.push_back(0);  //0-9, 0 is best quality
@@ -355,8 +514,9 @@ void ObstacleDetection::saveResult(){
 
   cv::imwrite(img_save_path, img, compression_params);
   cv::imwrite(mat_single_path, obs_single, compression_params);
-  cv::imwrite(mat_multi_path, obs_multi, compression_params);
-  cv::imwrite(mat_diff_path, obs_pre, compression_params);
+  //cv::imwrite(mat_multi_path, obs_multi, compression_params);
+  //cv::imwrite(mat_diff_path, obs_pre, compression_params);
+  cv::imwrite(obs_cluster_path, obs_cluster, compression_params);
   //pcl::io::savePCDFileASCII(cloud_single_path, *_laserCloud);
   //pcl::io::savePCDFileASCII(cloud_multi_path, cloudSum);
 }
@@ -387,6 +547,5 @@ void ObstacleDetection::imageSeqHandler(const std_msgs::Int32::ConstPtr &seqIn)
   _newImageSeq = true;
   _sequence = seqIn->data;
 }
-
 
 }

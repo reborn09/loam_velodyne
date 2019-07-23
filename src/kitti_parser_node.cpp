@@ -29,7 +29,7 @@ int main(int argc, char **argv)
     read_filelists( bin_path, file_lists, "bin" );
     sort_filelists( file_lists, "bin" );
 
-    for (int i = 2000; i < file_lists.size(); i++){
+    for (int i = start_frame; i < file_lists.size(); i++){
       if(ros::ok()){
         //std::cout<<"sequence: "<<i<<std::endl;
         std::string bin_file = bin_path + file_lists[i];
