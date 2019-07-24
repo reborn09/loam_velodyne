@@ -59,6 +59,12 @@ target_link_libraries(transformMaintenance ${catkin_LIBRARIES} ${PCL_LIBRARIES} 
 add_executable(obstacleDetection src/obstacle_detection_node.cpp)
 target_link_libraries(obstacleDetection ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBRARIES} loam )
 
+add_executable(icp src/icp_node.cpp)
+target_link_libraries(icp ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBRARIES} loam )
+
+add_executable(ndt src/ndt_node.cpp)
+target_link_libraries(ndt ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBRARIES} loam )
+
 if (CATKIN_ENABLE_TESTING)
   find_package(rostest REQUIRED)
   # TODO: Download test data

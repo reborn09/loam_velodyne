@@ -141,6 +141,12 @@ private:
    ros::Subscriber _subLaserOdometry;          ///< laser odometry message subscriber
    ros::Subscriber _subImu;                    ///< IMU message subscriber
    ros::Subscriber _subImageSeq;
+
+   int count = 0;
+   float time_all = 0;
+   std::string file_path1 = "/home/jiapengz/data/time_save/map_all.txt";
+   std::string file_path2 = "/home/jiapengz/data/time_save/map_ave.txt";
+
 };
 
 } // end namespace loam

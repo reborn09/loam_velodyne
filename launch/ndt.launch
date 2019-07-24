@@ -1,0 +1,12 @@
+<launch>
+
+  <arg name="rviz" default="true" />
+  <arg name="scanPeriod" default="0.1" />
+
+  <node pkg="loam_velodyne" type="kitti_parser" name="kitti_parser" output="screen">
+  </node>
+
+  <node pkg="loam_velodyne" type="ndt" name="ndt" output="screen">
+  </node>
+
+</launch>

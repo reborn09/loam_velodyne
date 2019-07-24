@@ -174,7 +174,33 @@ void MultiScanRegistration::spin()
     if(isLaserNew && isSeqNew){
       isLaserNew = false;
       isSeqNew = false;
+      struct timeval start;
+      struct timeval end;
+      unsigned long diff;
+      gettimeofday(&start, NULL);
       process(laserCloudIn, scanTime);
+      gettimeofday(&end, NULL);
+      diff = 1000000 * (end.tv_sec-start.tv_sec)+ end.tv_usec-start.tv_usec;
+      float consume_time = diff/1000;
+      time_all += consume_time;
+      std::cout << "extract time:" << consume_time <<std::endl;
+
+      //write
+      count++;
+      if(count<=100){
+        std::ofstream f1(file_path1, std::ofstream::app);
+        f1<<count<<"  "<<consume_time<<std::endl;
+        f1.close();
+      }
+      if(count == 100 ){
+        time_all = time_all / count;
+        std::ofstream f2(file_path2);
+        f2<<time_all<<std::endl;
+        f2.close();
+      }
+      if(count > 100){
+        std::cout<<"extract finish!!!"<<std::endl;
+      }
     }
     status = ros::ok();
     rate.sleep();

@@ -38,6 +38,10 @@
 
 #include <sensor_msgs/PointCloud2.h>
 #include <std_msgs/Int32.h>
+#include <sys/time.h>
+#include <unistd.h>
+#include <fstream>
+#include <string>
 
 
 namespace loam {
@@ -140,7 +144,10 @@ private:
   Time scanTime;
   ros::Subscriber _subLaserCloud;   ///< input cloud message subscriber
   ros::Subscriber _subSeqParser;
-
+  int count = 0;
+  float time_all = 0;
+  std::string file_path1 = "/home/jiapengz/data/time_save/extract_all.txt";
+  std::string file_path2 = "/home/jiapengz/data/time_save/extract_ave.txt";
   bool isLaserNew = false;
   bool isSeqNew = false;
 
