@@ -285,11 +285,11 @@ void LaserMapping::process()
    diff = 1000000 * (end.tv_sec-start.tv_sec)+ end.tv_usec-start.tv_usec;
    float consume_time = diff/1000;
    time_all+=consume_time;
+#if false
    std::cout << "map time:" << consume_time <<std::endl;
 
    //write
-   count++;
-   if(count<=100){
+   if(count>=1 && count<=100){
      std::ofstream f1(file_path1, std::ofstream::app);
      f1<<count<<"  "<<consume_time<<std::endl;
      f1.close();
@@ -303,6 +303,8 @@ void LaserMapping::process()
    if(count > 100){
      std::cout<<"map finish!!!"<<std::endl;
    }
+#endif
+   count++;
    publishResult();
 }
 

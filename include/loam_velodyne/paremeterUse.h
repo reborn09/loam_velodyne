@@ -2,6 +2,7 @@
 #define PAREMETERUSE_H
 
 #include <string>
+#include <dirent.h>
 
 //#define SAVE_PARSER_LIDAR
 //#define SAVE_RESULT

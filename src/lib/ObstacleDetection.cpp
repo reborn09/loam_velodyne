@@ -513,12 +513,12 @@ void ObstacleDetection::saveResult(){
   }
 
   cv::imwrite(img_save_path, img, compression_params);
-  cv::imwrite(mat_single_path, obs_single, compression_params);
+  //cv::imwrite(mat_single_path, obs_single, compression_params);
   //cv::imwrite(mat_multi_path, obs_multi, compression_params);
   //cv::imwrite(mat_diff_path, obs_pre, compression_params);
-  cv::imwrite(obs_cluster_path, obs_cluster, compression_params);
-  //pcl::io::savePCDFileASCII(cloud_single_path, *_laserCloud);
-  //pcl::io::savePCDFileASCII(cloud_multi_path, cloudSum);
+  //cv::imwrite(obs_cluster_path, obs_cluster, compression_params);
+  pcl::io::savePCDFileASCII(cloud_single_path, *_laserCloud);
+  pcl::io::savePCDFileASCII(cloud_multi_path, cloudSum);
 }
 
 void ObstacleDetection::laserCloudHandler(const sensor_msgs::PointCloud2ConstPtr &laserCloudMsg){
