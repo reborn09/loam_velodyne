@@ -31,7 +31,7 @@ int main(int argc, char **argv)
 
     for (int i = start_frame; i < file_lists.size(); i++){
       if(ros::ok()){
-        //std::cout<<"sequence: "<<i<<std::endl;
+        std::cout<<"sequence: "<<i<<std::endl;
         std::string bin_file = bin_path + file_lists[i];
         // load point cloud
         std::fstream input(bin_file.c_str(), std::ios::in | std::ios::binary);

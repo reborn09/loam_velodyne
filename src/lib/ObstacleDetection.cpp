@@ -31,6 +31,7 @@ ObstacleDetection::ObstacleDetection() :
   }
 
   obs_single = cv::Mat::zeros(row, col, CV_8UC3);
+  obs_single_draw = cv::Mat::zeros(row, col, CV_8UC3);
   obs_multi = cv::Mat::zeros(row, col, CV_8UC3);
   obs_pre = cv::Mat::zeros(row, col, CV_8UC3);
   obs_differ = cv::Mat::zeros(row, col, CV_8UC3);
@@ -113,7 +114,8 @@ void ObstacleDetection::process(){
     projectPointToGrid(pointsel, _grid_attr_single);
   }
   gridAttrToMat(_grid_attr_single, obs_single);
-  cluster(_grid_attr_single, obs_cluster, obs_single);
+  gridAttrToMat(_grid_attr_single, obs_single_draw);
+  cluster(_grid_attr_single, obs_cluster, obs_single_draw);
 
   int _pre_pos = _cur_pos - 1;
   if(_pre_pos < 0){
@@ -145,8 +147,9 @@ void ObstacleDetection::process(){
 
   cv::imshow("image", img);
   cv::imshow("single", obs_single);
+  cv::imshow("draw", obs_single_draw);
   cv::imshow("cluster", obs_cluster);
-  //cv::imshow("multi", obs_multi);
+  cv::imshow("multi", obs_multi);
   //cv::imshow("pre", obs_pre);
   //cv::imshow("differ",obs_differ);
   cv::waitKey(3);
@@ -171,6 +174,12 @@ void ObstacleDetection::reset(){
   for(int i = 0; i < row; i++){
     for(int j = 0; j < col; j++){
       obs_single.at<cv::Vec3b>(i, j) = cv::Vec3b(0, 0, 0);  //black
+    }
+  }
+
+  for(int i = 0; i < row; i++){
+    for(int j = 0; j < col; j++){
+      obs_single_draw.at<cv::Vec3b>(i, j) = cv::Vec3b(0, 0, 0);  //black
     }
   }
 
@@ -360,19 +369,19 @@ void ObstacleDetection::gridAttrToMat(Grid** _grid_attr, cv::Mat& img){
   }
 
   //expand grid
-  for(int i =0; i<row; i++){
-    for(int j=0; j<col; j++){
-      if(_grid_attr[i][j].attribute == OBS){
-        for(int loop1 = i - exp_grid_size; loop1 <= i + exp_grid_size; loop1++){
-          for(int loop2 = j - exp_grid_size; loop2 <= j + exp_grid_size; loop2++){
-            if(loop1>=0 && loop1<row && loop2>=0 && loop2<col){
-              img.at<cv::Vec3b>(loop1,loop2) = cv::Vec3b(0, 0, 255);
-            }
-          }
-        }
-      }
-    }
-  }
+//  for(int i =0; i<row; i++){
+//    for(int j=0; j<col; j++){
+//      if(_grid_attr[i][j].attribute == OBS){
+//        for(int loop1 = i - exp_grid_size; loop1 <= i + exp_grid_size; loop1++){
+//          for(int loop2 = j - exp_grid_size; loop2 <= j + exp_grid_size; loop2++){
+//            if(loop1>=0 && loop1<row && loop2>=0 && loop2<col){
+//              img.at<cv::Vec3b>(loop1,loop2) = cv::Vec3b(0, 0, 255);
+//            }
+//          }
+//        }
+//      }
+//    }
+//  }
 
   for(int i=5*range_front -5; i<5*range_front+5; i++){
     for(int j=5*range_left-5; j<5*range_left+5; j++){
@@ -414,7 +423,9 @@ void ObstacleDetection::cluster(Grid** _grid_attr, cv::Mat& img_gray, cv::Mat& i
     }
     cv::RotatedRect box = cv::minAreaRect(points);
     double area = box.size.width * box.size.height;
-    if(area > 40 && area < 500){
+    if(area > 36 && area < 300
+       && box.size.width >= 6 && box.size.width <=25
+       && box.size.height >= 6 &&box.size.height <=25){
       cv::Point2f vtx[4];
       box.points(vtx);
       for(int k=0; k<4; k++){
@@ -470,6 +481,7 @@ void ObstacleDetection::griddiffer(){
 void ObstacleDetection::saveResult(){
   std::string img_save_path;
   std::string mat_single_path;
+  std::string mat_single_draw_path;
   std::string mat_multi_path;
   std::string cloud_single_path;
   std::string cloud_multi_path;
@@ -482,6 +494,10 @@ void ObstacleDetection::saveResult(){
   ss.clear();
   ss<<result_save_location<<_sequence<<"_single.png";
   ss>>mat_single_path;
+
+  ss.clear();
+  ss<<result_save_location<<_sequence<<"_single_draw.png";
+  ss>>mat_single_draw_path;
 
   ss.clear();
   ss<<result_save_location<<_sequence<<"_multi.png";
@@ -514,11 +530,15 @@ void ObstacleDetection::saveResult(){
 
   cv::imwrite(img_save_path, img, compression_params);
   cv::imwrite(mat_single_path, obs_single, compression_params);
+  cv::imwrite(mat_single_draw_path, obs_single_draw, compression_params);
   //cv::imwrite(mat_multi_path, obs_multi, compression_params);
   //cv::imwrite(mat_diff_path, obs_pre, compression_params);
   cv::imwrite(obs_cluster_path, obs_cluster, compression_params);
   //pcl::io::savePCDFileASCII(cloud_single_path, *_laserCloud);
   //pcl::io::savePCDFileASCII(cloud_multi_path, cloudSum);
+  if(_sequence > 0){
+    pcl::io::savePCDFileASCII(cloud_single_path, *_laserCloudStack[_cur_pos]);
+  }
 }
 
 void ObstacleDetection::laserCloudHandler(const sensor_msgs::PointCloud2ConstPtr &laserCloudMsg){

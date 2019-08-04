@@ -82,6 +82,7 @@ private:
   //600*400
   Grid** _grid_attr_single = NULL;  //current front 90m, back 30m, left 40m, right 40m, every grid is 20cm
   cv::Mat obs_single;
+  cv::Mat obs_single_draw;
 
   Grid** _grid_attr_multi = NULL;
   cv::Mat obs_multi;
