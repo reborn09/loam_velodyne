@@ -1,0 +1,4 @@
+<launch>
+    <node pkg="loam_velodyne" type="trackingShow" name="trackingShow" output="screen">
+    </node>
+</launch>

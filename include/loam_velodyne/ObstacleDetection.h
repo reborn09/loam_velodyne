@@ -16,6 +16,8 @@
 #include <opencv2/imgproc.hpp>
 #include <std_msgs/Int32.h>
 #include "loam_velodyne/paremeterUse.h"
+#include <fstream>
+#include <stdio.h>
 
 namespace loam {
 
@@ -76,6 +78,8 @@ private:
   Twist _transformSum;
   pcl::PointCloud<pcl::PointXYZI>::Ptr _laserCloud;
   std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> _laserCloudStack;
+
+  pcl::PointCloud<pcl::PointXYZI> cloudtemp;
 
   int _grid_size = 20;  //cm
 

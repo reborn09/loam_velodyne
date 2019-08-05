@@ -41,6 +41,7 @@ ObstacleDetection::ObstacleDetection() :
   std::stringstream ss;
   ss<<img_base_dir<<sequence<<"/image_2/";
   ss>>img_path;
+  std::cout<<"^^^:  "<<sequence<<std::endl;
   read_filelists(img_path, file_lists, "png");
   sort_filelists(file_lists, "png");
 }
@@ -101,12 +102,17 @@ void ObstacleDetection::process(){
                 + (pt.y - _transformSum.pos.y()) * (pt.y - _transformSum.pos.y())
                 + (pt.z - _transformSum.pos.z()) * (pt.z - _transformSum.pos.z());
     dist = sqrt(dist);
-    if(dist > 2.85){
+    if(dist > 3.5){
       _laserCloudStack[_cur_pos]->push_back(pt);
     }
   }
 
   pcl::PointXYZI pointsel;
+
+  cloudtemp.clear();
+  for(auto const& pt : _laserCloudStack[_cur_pos]->points){
+    cloudtemp.push_back(pt);
+  }
 
   //process single frame
   for(auto const& pt : _laserCloud->points){
@@ -139,6 +145,7 @@ void ObstacleDetection::process(){
   gridAttrToMat(_grid_attr_multi, obs_multi);
 
   std::string file_path = img_path + file_lists[_sequence];
+  //std::cout<<file_path<<std::endl;
   img = cv::imread(file_path);
 
 #ifdef SAVE_RESULT
@@ -487,6 +494,7 @@ void ObstacleDetection::saveResult(){
   std::string cloud_multi_path;
   std::string mat_diff_path;
   std::string obs_cluster_path;
+  std::string transform_path;
   std::stringstream ss;
   ss<<result_save_location<<_sequence<<"_img.png";
   ss>>img_save_path;
@@ -519,6 +527,10 @@ void ObstacleDetection::saveResult(){
   ss<<result_save_location<<_sequence<<"_gray.png";
   ss>>obs_cluster_path;
 
+  ss.clear();
+  ss<<result_save_location<<_sequence<<".txt";
+  ss>>transform_path;
+
   std::vector<int> compression_params;
   compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
   compression_params.push_back(0);  //0-9, 0 is best quality
@@ -529,16 +541,24 @@ void ObstacleDetection::saveResult(){
   }
 
   cv::imwrite(img_save_path, img, compression_params);
-  cv::imwrite(mat_single_path, obs_single, compression_params);
+  //cv::imwrite(mat_single_path, obs_single, compression_params);
   cv::imwrite(mat_single_draw_path, obs_single_draw, compression_params);
-  //cv::imwrite(mat_multi_path, obs_multi, compression_params);
+  cv::imwrite(mat_multi_path, obs_multi, compression_params);
   //cv::imwrite(mat_diff_path, obs_pre, compression_params);
-  cv::imwrite(obs_cluster_path, obs_cluster, compression_params);
+  //cv::imwrite(obs_cluster_path, obs_cluster, compression_params);
   //pcl::io::savePCDFileASCII(cloud_single_path, *_laserCloud);
   //pcl::io::savePCDFileASCII(cloud_multi_path, cloudSum);
   if(_sequence > 0){
-    pcl::io::savePCDFileASCII(cloud_single_path, *_laserCloudStack[_cur_pos]);
+    pcl::io::savePCDFileASCII(cloud_single_path, cloudtemp);
   }
+  std::ofstream f1(transform_path, std::ofstream::app);
+  f1<<_transformSum.pos.x()<<std::endl
+    <<_transformSum.pos.y()<<std::endl
+    <<_transformSum.pos.z()<<std::endl
+    <<_transformSum.rot_x.rad()<<std::endl
+    <<_transformSum.rot_y.rad()<<std::endl
+    <<_transformSum.rot_z.rad()<<std::endl;
+  f1.close();
 }
 
 void ObstacleDetection::laserCloudHandler(const sensor_msgs::PointCloud2ConstPtr &laserCloudMsg){
