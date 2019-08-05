@@ -550,6 +550,7 @@ void ObstacleDetection::saveResult(){
   //pcl::io::savePCDFileASCII(cloud_multi_path, cloudSum);
   if(_sequence > 0){
     pcl::io::savePCDFileASCII(cloud_single_path, cloudtemp);
+    pcl::io::savePCDFileASCII(cloud_multi_path, cloudSum);
   }
   std::ofstream f1(transform_path, std::ofstream::app);
   f1<<_transformSum.pos.x()<<std::endl

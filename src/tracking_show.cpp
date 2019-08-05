@@ -70,7 +70,7 @@ int main(int argc, char **argv)
 
 
   //process
-  for(int i = start_frame ; i <end_frame; i++){
+  for(int i = start_frame ; i <=end_frame; i++){
     stringstream ss;
     string filename;
     ss.clear();
@@ -95,12 +95,23 @@ int main(int argc, char **argv)
   cv::waitKey(0);
 
   //save
+#if true
   ss.clear();
   string allcloudsavepath;
   ss<<save_location<<"cloud.pcd";
   ss>>allcloudsavepath;
   cout<<"cloud size:"<<cloudsave.size()<<endl;
   pcl::io::savePCDFileASCII(allcloudsavepath, cloudsave);
+
+  ss.clear();
+  string resultpath;
+  ss<<save_location<<"result.png";
+  ss>>resultpath;
+  std::vector<int> compression_params;
+  compression_params.push_back(CV_IMWRITE_PNG_COMPRESSION);
+  compression_params.push_back(0);  //0-9, 0 is best quality
+  cv::imwrite(resultpath, obs_single, compression_params);
+#endif
 
   //destroy
   for(int i = 0; i < row; i++){

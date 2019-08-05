@@ -195,7 +195,9 @@ void cluster(Grid** _grid_attr, cv::Mat& img_gray, cv::Mat& img_color){
     double area = box.size.width * box.size.height;
     if(area > 36 && area < 300
        && box.size.width >= 6 && box.size.width <=25
-       && box.size.height >= 6 &&box.size.height <=25){
+       && box.size.height >= 6 &&box.size.height <=25
+       && box.center.x >= 125 && box.center.x <= 150
+       && box.center.y >= 300){
       cv::Point2f vtx[4];
       box.points(vtx);
       for(int k=0; k<4; k++){
