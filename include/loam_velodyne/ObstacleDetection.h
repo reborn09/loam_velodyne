@@ -13,16 +13,20 @@
 #include <opencv/cv.h>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/core/core.hpp>
+#include <opencv2/imgproc.hpp>
 #include <std_msgs/Int32.h>
 #include "loam_velodyne/paremeterUse.h"
-#include <sstream>
+#include <fstream>
+#include <stdio.h>
 
 namespace loam {
 
 enum GRID_ATTRIBUTE{
   UNKNOWN,  //no lidar point
   FLAT,     //traversable
-  OBS       //not traversable
+  OBS,      //not traversable
+  SUSPEND,   //suspeng obstacle
+  CAR_TOP   //car top
 };
 
 class Grid{
@@ -31,12 +35,14 @@ public:
   float min_height; //cm
   float max_height; //cm
   GRID_ATTRIBUTE attribute;
+  std::vector<pcl::PointXYZI> cloud;
 };
 
 class ObstacleDetection{
 
 public:
   ObstacleDetection();
+  ~ObstacleDetection();
   bool setup(ros::NodeHandle& node);
   void spin();
 
@@ -45,10 +51,10 @@ private:
   bool hasNewData();
   void reset();
   void pointToOrigin(const pcl::PointXYZI& pi, pcl::PointXYZI& po);
-  void projectPointToGridSingle(pcl:: PointXYZI pi);
-  void projectPointToGridMulti(pcl:: PointXYZI pi);
-  void gridAttrToMatSingle();
-  void gridAttrToMatMulti();
+  void projectPointToGrid(pcl::PointXYZI pi, Grid** _grid_attr);
+  void gridAttrToMat(Grid** _grid_attr, cv::Mat& img);
+  void griddiffer();
+  void cluster(Grid** _grid_attr, cv::Mat& img_gray, cv::Mat& img_color);
   void saveResult();
   void laserCloudHandler(const sensor_msgs::PointCloud2ConstPtr& laserCloudMsg);
   void odometryHandler(const nav_msgs::Odometry::ConstPtr& odometryMsg);
@@ -73,18 +79,29 @@ private:
   pcl::PointCloud<pcl::PointXYZI>::Ptr _laserCloud;
   std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> _laserCloudStack;
 
+  pcl::PointCloud<pcl::PointXYZI> cloudtemp;
+
   int _grid_size = 20;  //cm
-  float _obsHeightThreshhold = 30.0; //cm
 
-  Grid _grid_attr_single[600][400];  //front 90m, back 30m, left 40m, right 40m, every grid is 20cm
+  //600*400
+  Grid** _grid_attr_single = NULL;  //current front 90m, back 30m, left 40m, right 40m, every grid is 20cm
   cv::Mat obs_single;
+  cv::Mat obs_single_draw;
 
-  Grid _grid_attr_multi[600][400];
+  Grid** _grid_attr_multi = NULL;
   cv::Mat obs_multi;
+
+  Grid** _grid_attr_pre = NULL;
+  cv::Mat obs_pre;
+
+  cv::Mat obs_cluster;
+
+  cv::Mat obs_differ;
 
   cv::Mat img;
 
   std::string img_path;
+  std::vector<std::string> file_lists;
   std::vector<std::string> frameNo;
 
 };
