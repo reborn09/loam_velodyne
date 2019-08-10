@@ -570,8 +570,8 @@ void ObstacleDetection::saveResult(){
   }
 
   cv::imwrite(img_save_path, img, compression_params);
-  //cv::imwrite(mat_single_path, obs_single, compression_params);
-  cv::imwrite(mat_single_draw_path, obs_single_draw, compression_params);
+  cv::imwrite(mat_single_path, obs_single, compression_params);
+  //cv::imwrite(mat_single_draw_path, obs_single_draw, compression_params);
   cv::imwrite(mat_multi_path, obs_multi, compression_params);
   //cv::imwrite(mat_diff_path, obs_pre, compression_params);
   //cv::imwrite(obs_cluster_path, obs_cluster, compression_params);
@@ -581,14 +581,14 @@ void ObstacleDetection::saveResult(){
     //pcl::io::savePCDFileASCII(cloud_single_path, cloudtemp);
     //pcl::io::savePCDFileASCII(cloud_multi_path, cloudSum);
   }
-  std::ofstream f1(transform_path, std::ofstream::app);
-  f1<<_transformSum.pos.x()<<std::endl
-    <<_transformSum.pos.y()<<std::endl
-    <<_transformSum.pos.z()<<std::endl
-    <<_transformSum.rot_x.rad()<<std::endl
-    <<_transformSum.rot_y.rad()<<std::endl
-    <<_transformSum.rot_z.rad()<<std::endl;
-  f1.close();
+//  std::ofstream f1(transform_path, std::ofstream::app);
+//  f1<<_transformSum.pos.x()<<std::endl
+//    <<_transformSum.pos.y()<<std::endl
+//    <<_transformSum.pos.z()<<std::endl
+//    <<_transformSum.rot_x.rad()<<std::endl
+//    <<_transformSum.rot_y.rad()<<std::endl
+//    <<_transformSum.rot_z.rad()<<std::endl;
+//  f1.close();
 #ifdef ANALYSE_OBS
   int single[100] = {0};
   int multi[100] = {0};
@@ -596,7 +596,7 @@ void ObstacleDetection::saveResult(){
   ss<<result_save_location<<_sequence<<"_obs_single.txt";
   ss>>obs_single_path;
   ss.clear();
-  ss<<result_save_location<<_sequence<<"_obs_multi.txt";
+  ss<<result_save_location<<_sequence<<"_obs_multi_"<<_fusion_num<<".txt";
   ss>>obs_multi_path;
   int center_col = 5*range_left;
   int center_row = 5*range_front;
